@@ -5,6 +5,7 @@
 % Run this script after loadMRCLAMdataSet.m and sampleMRCLAMdataSet.m
 
 % Options %
+WindowPosition=[50 40 630 740]; %left bottom width height, from primary display
 start_timestep = 1;
 end_timestep = timesteps; 
 timesteps_per_frame = 50;
@@ -26,7 +27,7 @@ for i=6:6+n_landmarks
 end
 
 figHandle = figure('Name','Dataset Groundtruth','Renderer','OpenGL');
-set(gcf,'Position',[1300 1 630 950])
+set(gcf,'Position',WindowPosition)
 plotHandles_robot_gt = zeros(n_robots,1);
 plotHandles_landmark_gt = zeros(n_landmarks,1);
 
