@@ -66,9 +66,9 @@ classdef particle_filter < handle
                 %v = normrnd(control(1), 0.005); % trans
                 % Max rot is 0.57
                 %w = normrnd(control(2), 0.05); % rot
-                v = normrnd(control(1), 0.02 + abs(0.3*control(1))); % trans
+                v = normrnd(control(1), 0.04 + abs(0.3*control(1))); % trans
                 % Max rot is 0.57
-                w = normrnd(control(2), 0.03 + abs(0.3*control(2))); % rot
+                w = normrnd(control(2), 0.08 + abs(0.3*control(2))); % rot
                 
                 rot = w * dt;
                 trans = v * dt;
@@ -130,8 +130,8 @@ classdef particle_filter < handle
 
                     range_error = z(1,j) - range_e;
                     bearing_error = wrapToPi(z(2,j) - bearing_e);
-                    prob_range = mvnpdf(range_error, 0, 0.07);
-                    prob_bearing = mvnpdf(bearing_error, 0, 0.07);
+                    prob_range = mvnpdf(range_error, 0, 0.12);
+                    prob_bearing = mvnpdf(bearing_error, 0, 0.12);
                     w(i) = w(i) * (prob_range * prob_bearing)^2;
                 end
             end
