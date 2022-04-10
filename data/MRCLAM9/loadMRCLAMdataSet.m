@@ -19,21 +19,27 @@ Landmark_Groundtruth = [subject_num x y x_sd y_sd];
 clear subject_num x y x_sd y_sd;
 n_landmarks = length(Landmark_Groundtruth); 
 
+% Modified to store return value in one
+Robots = cell(1, n_robots);
+
 for i=1:n_robots
  
     disp(['Reading robot ' num2str(i) ' groundtruth'])
-    [time x y theta] = textread(['Robot' num2str(i) '_Groundtruth.dat'], '%f %f %f %f','commentstyle','shell');
-    eval(['Robot' num2str(i) '_Groundtruth = [time x y theta];']); 
+    [time, x, y, theta] = textread(['Robot' num2str(i) '_Groundtruth.dat'], '%f %f %f %f','commentstyle','shell');
+    %eval(['Robot' num2str(i) '_Groundtruth = [time x y theta];']); 
+    Robots{i}.G = [time x y theta];
     clear time x y theta;
 
     disp(['Reading robot ' num2str(i) ' odometry'])
     [time, v, w] = textread(['Robot' num2str(i) '_Odometry.dat'], '%f %f %f','commentstyle','shell');
-    eval(['Robot' num2str(i) '_Odometry = [time v w];']);
+    %eval(['Robot' num2str(i) '_Odometry = [time v w];']);
+    Robots{i}.O = [time v w];
     clear time v w;
     
     disp(['Reading robot ' num2str(i) ' measurements'])
-    [time, barcode_num, r b] = textread(['Robot' num2str(i) '_Measurement.dat'], '%f %f %f %f','commentstyle','shell');
-    eval(['Robot' num2str(i) '_Measurement = [time barcode_num r b];']);
+    [time, barcode_num, r, b] = textread(['Robot' num2str(i) '_Measurement.dat'], '%f %f %f %f','commentstyle','shell');
+    %eval(['Robot' num2str(i) '_Measurement = [time barcode_num r b];']);
+    Robots{i}.M = [time barcode_num r b];
     clear time barcode_num r b;
 
 end

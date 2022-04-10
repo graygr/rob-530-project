@@ -36,7 +36,7 @@ r_landmark = 0.055;
 d_landmark = 2*r_landmark;
 
 % initial setup
-Robot = [Robot1_Groundtruth(:,2:4) Robot2_Groundtruth(:,2:4) Robot3_Groundtruth(:,2:4) Robot4_Groundtruth(:,2:4) Robot5_Groundtruth(:,2:4)];
+Robot = [Robots{1}.G(:,2:4) Robots{2}.G(:,2:4) Robots{3}.G(:,2:4) Robots{4}.G(:,2:4) Robots{5}.G(:,2:4)];
 for i = 1:n_robots  
     x=Robot(1,i*3-2);
     y=Robot(1,i*3-1);
