@@ -8,7 +8,7 @@ function [Robots, timesteps] = sampleMRCLAMdataSet(Robots, sample_time)
 
     % sample_time = 0.02;
     
-    n_robots = size(Robots, 1);
+    n_robots = size(Robots, 2);
     
     min_time = Robots{1}.G(1,1);
     max_time = Robots{1}.G(end,1);
