@@ -25,7 +25,25 @@ run('Tools\sampleMRCLAMdataSet.m')
 
  
 cd(mainFilePath)
-%% Particle filter for localization
+%% EKF filter for localization
+close all;
+robotsToRun = [1 2 3 4 5];
+% robotsToRun = [5 ];
+% Makes an assumption that updates should keep the robot close to where its
+% previus pose was, but this is flawed because if we drift away then we
+% have no hopes to recover, so there should be a smarter way to decide if
+% we reject or accept an update...
+rejectDistanceThreshold = 0.3;
+numSteps = 8000;%length(Robot1_Groundtruth)/8; %number of steps from dataset to run
+useGTForObservedRobots = true;
+useObservationsToCorrect = true;
+plotStatistics = false;
+beta(1) = deg2rad(25);
+beta(2) = 1.2;%0.3;
+
+run('runEKF.m');
+useObservationsToCorrect = false;
+run('runEKF.m');
 
 % Update based on measurements of landmarks and other robots
 
