@@ -18,4 +18,4 @@ We used Matlab R2021a
 We used the [UTIAS Multi-Robot Cooperative Localization and Mapping] Dataset(http://asrl.utias.utoronto.ca/datasets/mrclam/index.html), specifically the first dataset for developement and testing purposes.
   
 # Usage
-At the moment, switch branches to "master" for EKF, "pf" for Particle Filter, and "<>" for UKF, then run the main.m file in each. 
+At the moment, switch branches to "master" for EKF, "pf" for Particle Filter, and "UKF" for UKF, then run the main.m file in each. 
