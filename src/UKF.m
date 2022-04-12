@@ -54,18 +54,23 @@
                 end
                 switch idx
                     case 1
+%                         continue
                         landmark = ROBOT1.mu+(ROBOT1.Sigma*randn(3, 1))';
 %                         landmark = ROBOT1(step, 2:3);
                     case 2
+%                         continue
                         landmark = ROBOT2.mu+(ROBOT2.Sigma*randn(3, 1))';
 %                         landmark = ROBOT2(step, 2:3);
                     case 3
+%                         continue
                         landmark = ROBOT3.mu+(ROBOT3.Sigma*randn(3, 1))';
 %                         landmark = ROBOT3(step, 2:3);
                     case 4
+%                         continue
                         landmark = ROBOT4.mu+(ROBOT4.Sigma*randn(3, 1))';
 %                         landmark = ROBOT4(step, 2:3);
                     case 5
+%                         continue
                         landmark = ROBOT5.mu+(ROBOT5.Sigma*randn(3, 1))';
 %                         landmark = ROBOT5(step, 2:3);
                     otherwise

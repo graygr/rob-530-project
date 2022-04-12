@@ -5,7 +5,7 @@
 %% Import data from MRCLAM_1 - Defunct, they provide load and sample code
 % Set pwd
 % TODO: Change to match your filepath
-cd("C:\Users\Lihuashu\Desktop\rob-530-project-master")
+cd("C:\Users\Lihuashu\Desktop\ROB530\rob-530-project")
 
 % Load data
 run('data\MRCLAM1\loadMRCLAMdataSet.m')
@@ -23,5 +23,8 @@ run('Tools\sampleMRCLAMdataSet.m')
 % % 
  
 %% Unscented Kalman Filter
+run('src\runUKF.m')
+
+% run('Tools\animateMRCLAMdataSet.m')
 
 

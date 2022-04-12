@@ -124,12 +124,26 @@ error2 = sqrt((Robot2_Correction(1:nsteps,1)-Robot2_Groundtruth(1:nsteps,2)).^2+
 error3 = sqrt((Robot3_Correction(1:nsteps,1)-Robot3_Groundtruth(1:nsteps,2)).^2+(Robot3_Correction(1:nsteps,2)-Robot3_Groundtruth(1:nsteps,3)).^2);
 error4 = sqrt((Robot4_Correction(1:nsteps,1)-Robot4_Groundtruth(1:nsteps,2)).^2+(Robot4_Correction(1:nsteps,2)-Robot4_Groundtruth(1:nsteps,3)).^2);
 error5 = sqrt((Robot5_Correction(1:nsteps,1)-Robot5_Groundtruth(1:nsteps,2)).^2+(Robot5_Correction(1:nsteps,2)-Robot5_Groundtruth(1:nsteps,3)).^2);
-mse = [mean(error1); mean(error2); mean(error3); mean(error4); mean(error5)];
+distance_MSE = [mean(error1); mean(error2); mean(error3); mean(error4); mean(error5)];
+
+angle_error1 = abs(wrapToPi(Robot1_Correction(1:nsteps,3)-Robot1_Groundtruth(1:nsteps,4)));
+angle_error2 = abs(wrapToPi(Robot2_Correction(1:nsteps,3)-Robot2_Groundtruth(1:nsteps,4)));
+angle_error3 = abs(wrapToPi(Robot3_Correction(1:nsteps,3)-Robot3_Groundtruth(1:nsteps,4)));
+angle_error4 = abs(wrapToPi(Robot4_Correction(1:nsteps,3)-Robot4_Groundtruth(1:nsteps,4)));
+angle_error5 = abs(wrapToPi(Robot5_Correction(1:nsteps,3)-Robot5_Groundtruth(1:nsteps,4)));
+angle_MSE = [mean(angle_error1); mean(angle_error2); mean(angle_error3); mean(angle_error4); mean(angle_error5)];
 
 figure(1);
 plot(0:0.02:(nsteps-1)*0.02, error1, 0:0.02:(nsteps-1)*0.02, error2, 0:0.02:(nsteps-1)*0.02, error3, 0:0.02:(nsteps-1)*0.02, error4, 0:0.02:(nsteps-1)*0.02, error5, LineWidth=1.5);
-xlabel('Time/s');
-ylabel('Distance/m');
+xlabel('Time(s)');
+ylabel('Distance(m)');
 legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
+title('Distance Error(UKF using landmark and robots groundtruth)');
+axis([0 1500 0 3]);
 
-
+figure(2);
+plot(0:0.02:(nsteps-1)*0.02, angle_error1, 0:0.02:(nsteps-1)*0.02, angle_error2, 0:0.02:(nsteps-1)*0.02, angle_error3, 0:0.02:(nsteps-1)*0.02, angle_error4, 0:0.02:(nsteps-1)*0.02, angle_error5, LineWidth=1.5);
+xlabel('Time(s)');
+ylabel('Angle(rad)');
+legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
+title('Angle Error(UKF using landmark and robots groundtruth)');
