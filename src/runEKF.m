@@ -6,6 +6,8 @@ disp(robotsToRun);
 tic;
 waitbar_h = waitbar(0,'Waitbar');
 
+timeTrustNumSteps = 1000;
+
 %Assume for now that all robots will use same alphas and beta
 % Motion noise (in odometry space, see Table 5.5, p.134 in book).
 % alphas = [  0.25 0.05 ...
@@ -40,7 +42,13 @@ for i=1:length(robotsToRun)
     eval(['lastvalidMeasurementIndex' num2str(id) ' = 1;'])
 %     eval(['rejectedUpdates' num2str(id) ' = 0;'])
     eval(['countBadObservationIDMismatch' num2str(id) ' = 0;'])    
+    eval(['numLandmarksObsUsed' num2str(id) ' = 0;'])   
+    eval(['numRobotObsUsed' num2str(id) ' = 0;'])   
+    eval(['numUpdatesUsed' num2str(id) ' = 0;'])    
     eval(['results' num2str(id) ' = zeros(8,numSteps);'])
+    
+    eval(['tStepLastUpdate' num2str(id) ' = 0;'])   
+    eval(['rejectedDueToTrustTStep' num2str(id) ' = 0;'])    
 end
 
 % subect number ids are barcode values, and need to be mapped to which
@@ -60,12 +68,12 @@ landmarkDistanceThresholdSquared = landmarkDistanceThreshold^2;
 
 observationsDiff = [];
 observationsDiffIndex = 1;
-%%
+%
 lastPerc = 0;
 for t = 1:numSteps
     
     perc = t/numSteps;
-    if (abs(perc-lastPerc)>.05)
+    if (abs(perc-lastPerc)>.01)
         lastPerc = perc;
         waitbar(perc,waitbar_h,sprintf('%f%% along...',perc*100))
     end
@@ -125,6 +133,8 @@ for t = 1:numSteps
                 idObserved = subjectNumToIDMAP(measurements(j,1));
                 measuredBearing = measurements(j,3);
                 measuredRange = measurements(j,2);
+                
+    
                 if (idObserved < 6) && ~useLandmarksOnly
                     if useGTForObservedRobots
         %                 disp(['observed robot: ',num2str(id)])
@@ -139,7 +149,15 @@ for t = 1:numSteps
                         observations(5, obsCol) = idObserved; %observed id
                         observations(6, obsCol) = measurements(j,1); %barcode id
                         obsCol = obsCol +1;
+                        eval(['numRobotObsUsed' num2str(id) ' =numRobotObsUsed' num2str(id) ' +1;'])   
                     elseif useEstimateForObservedRobots
+                        
+                        eval(['tStepLastUpdate = tStepLastUpdate' num2str(idObserved) ';']) 
+                        if t-tStepLastUpdate > timeTrustNumSteps
+                            % we do not trust the observed robots pose
+                            eval(['rejectedDueToTrustTStep' num2str(id) ' =rejectedDueToTrustTStep' num2str(id) ' +1;'])    
+                            continue;
+                        end
                         eval(['obsRobotEstimate = robotPose' num2str(id) '(t-1,:);'])
                         observations(1, obsCol) = measuredBearing; %get bearing from measurment
                         observations(2, obsCol) = measuredRange; %get range from measurment
@@ -148,6 +166,7 @@ for t = 1:numSteps
                         observations(5, obsCol) = idObserved; %observed id
                         observations(6, obsCol) = measurements(j,1); %barcode id
                         obsCol = obsCol +1;
+                        eval(['numRobotObsUsed' num2str(id) ' =numRobotObsUsed' num2str(id) ' +1;'])   
                         
                     else
                         error("Not setup for this method of observing other robots");
@@ -179,6 +198,7 @@ for t = 1:numSteps
                     observations(5, obsCol) = idObserved; %observed id
                     observations(6, obsCol) = measurements(j,1); %barcode id
                     obsCol = obsCol +1;
+                    eval(['numLandmarksObsUsed' num2str(id) ' =numLandmarksObsUsed' num2str(id) ' +1;'])   
                 end
 %                 %Debugging observation issues
 %                 eval(['mygt = Robot' num2str(id) '_Groundtruth(' num2str(t) ',1:4);'])
@@ -212,6 +232,8 @@ for t = 1:numSteps
        if observationsAvailable && useObservationsToCorrect
            eval(['observationsUsedatIndex' num2str(id) ' = [observationsUsedatIndex' num2str(id) ' t];'])
            filters{i}.correction(observations);
+           eval(['numUpdatesUsed' num2str(id) ' =numUpdatesUsed' num2str(id) ' +1;']) 
+           eval(['tStepLastUpdate' num2str(id) '= t;'])
        else
            filters{i}.setPredictionAsCurrent();
        end
@@ -441,3 +463,24 @@ for i=1:length(robotsToRun)
 
 end
 toc;
+
+%%
+figure();
+hold on;
+numSteps = t;
+for i=1:length(robotsToRun)
+    id = robotsToRun(i);
+    eval(['rejectedDueToTrustTStep' num2str(id) ''])
+    eval(['results = results' num2str(id) ';'])
+    plot(1:numSteps,results(8,1:numSteps));   
+    eval(['numLandmarksObsUsed' num2str(id) ''])   
+    eval(['numRobotObsUsed' num2str(id) ' '])   
+    eval(['numUpdatesUsed' num2str(id) ' '])    
+end
+% title("EKF - Use Robot Est w/ 20 sec trust barrier");
+% title("EKF - Landmark Only");
+title("EKF - Use Robot GT Measurement");
+ylim([0 9]);
+xlabel("Timestep");
+ylabel("Distance Error");
+legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");

@@ -27,7 +27,7 @@ for currDataIndex=1:length(runDataFolders)
     
     % EKF filter for localization
     robotsToRun = [1 2 3 4 5];
-    numSteps = 2000;%length(Robot1_Groundtruth); %number of steps from dataset to run
+    numSteps = 30000;%length(Robot1_Groundtruth); %number of steps from dataset to run
     plotStatistics = false;
     plotObservationLines = [false false false]; %show when observations were used in the [x y theta] plots
     % The measurements may have the wrong landmark! Ignore
@@ -45,6 +45,7 @@ for currDataIndex=1:length(runDataFolders)
     useGTForObservedRobots = true;
     useEstimateForObservedRobots = ~useGTForObservedRobots;
     run('runEKF.m');
+    close all;
     cd(collectedDataPath);
     cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksAndRobotGT.mat");');
     eval(cmd);
@@ -53,6 +54,7 @@ for currDataIndex=1:length(runDataFolders)
     %Collect data on localizing with landmark data only
     useLandmarksOnly = true;
     run('runEKF.m');
+    close all;
     cd(collectedDataPath);
     cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksOnly.mat");');
     eval(cmd);
@@ -61,6 +63,7 @@ for currDataIndex=1:length(runDataFolders)
     % Collect data on localizing by predicition only
     useObservationsToCorrect = false;
     run('runEKF.m');
+    close all;
     cd(collectedDataPath);
     cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_predictionOnly.mat");');
     eval(cmd);   
