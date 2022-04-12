@@ -16,7 +16,7 @@ init1.Sigma = initialStateCov;
 init1.kappa_g = 1;
 init2.mu = initialStateMean2;
 init2.Sigma = initialStateCov;
-init2.kappa_g = 0;
+init2.kappa_g = 1;
 init3.mu = initialStateMean3;
 init3.Sigma = initialStateCov;
 init3.kappa_g = 1;
@@ -138,7 +138,7 @@ plot(0:0.02:(nsteps-1)*0.02, error1, 0:0.02:(nsteps-1)*0.02, error2, 0:0.02:(nst
 xlabel('Time(s)');
 ylabel('Distance(m)');
 legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
-title('Distance Error(UKF using landmark and robots groundtruth)');
+title('Distance Error(UKF using landmark and robot estimates)');
 axis([0 1500 0 3]);
 
 figure(2);
@@ -146,4 +146,4 @@ plot(0:0.02:(nsteps-1)*0.02, angle_error1, 0:0.02:(nsteps-1)*0.02, angle_error2,
 xlabel('Time(s)');
 ylabel('Angle(rad)');
 legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
-title('Angle Error(UKF using landmark and robots groundtruth)');
+title('Angle Error(UKF using landmark and robot estimates)');
