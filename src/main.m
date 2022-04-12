@@ -6,9 +6,10 @@ clc;clear; close all;
 %
 % Set pwd
 % TODO: Change to match your filepath
-cd("C:\Users\akgre\Documents\Masters\NAVARCH 568\project\")
-addpath 'C:\Users\akgre\Documents\Masters\NAVARCH 568\project\src'
-%cd("C:\Users\Gregor Limstrom\Documents\masters\navarch568\project\")
+% cd("C:\Users\akgre\Documents\Masters\NAVARCH 568\project\")
+% addpath 'C:\Users\akgre\Documents\Masters\NAVARCH 568\project\src'
+cd("C:\Users\Gregor Limstrom\Documents\masters\navarch568\rob-530-project\")
+addpath 'C:\Users\Gregor Limstrom\Documents\masters\navarch568\rob-530-project\src'
 
 %% Load data from MRCLAM9
 %run('data\MRCLAM9\loadMRCLAMdataSet.m')
@@ -24,13 +25,14 @@ dt = 0.02;
 global FIELDINFO;
 FIELDINFO = Landmark_Groundtruth;
 global ROBOT_ESTIMATES;
-ROBOT_ESTIMATES = zeros(5,3);
+% x,y,theta, time since last measurement update
+ROBOT_ESTIMATES = zeros(5,4);
 
 % Add pose estimate
 for i = 1:5
     Robots{i}.Est = zeros(size(Robots{i}.G,1), 4);
     % Initialize robot estimates to initial groundtruth
-    ROBOT_ESTIMATES(i,:) = Robots{i}.G(1,2:4);
+    ROBOT_ESTIMATES(i,1:3) = Robots{i}.G(1,2:4);
 end
 
 
@@ -45,12 +47,15 @@ MEAS_STATS = zeros(5,3);
 
 % Robot 1 Solo Start/End
 start = 600;
-%start = 50000;
+%start = 1;
 % Start time
 t = Robots{1}.G(start, 1);
 
 % End index and time
-end_idx = 50000;
+end_idx = 30000;
+
+% Num robots
+num_robots = 5;
 
 % Robot 1-5 coop data
 % Robot 1 starts at 530, ends at 75000, t = 10.58
@@ -124,41 +129,44 @@ r5_sys.last_timestep = t;
 % Initialization
 %
 %
+
+num_particles = 100;
+
 % For robot 1
 init1 = [];
-init1.n = 100;
+init1.n = num_particles;
 init1.x = [Robots{1}.G(start,2); 
             Robots{1}.G(start,3); 
             Robots{1}.G(start,4)];
-init1.Sigma = 0.01*eye(3);
+init1.Sigma = 0.1*eye(3);
         
 init2 = [];
-init2.n = 50;
+init2.n = num_particles;
 init2.x = [Robots{2}.G(start,2); 
             Robots{2}.G(start,3); 
             Robots{2}.G(start,4)];
-init2.Sigma = 0.01*eye(3);
+init2.Sigma = 0.1*eye(3);
 
 init3 = [];
-init3.n = 50;
+init3.n = num_particles;
 init3.x = [Robots{3}.G(start,2); 
             Robots{3}.G(start,3); 
             Robots{3}.G(start,4)];
-init3.Sigma = 0.01*eye(3);
+init3.Sigma = 0.1*eye(3);
 
 init4 = [];
-init4.n = 50;
+init4.n = num_particles;
 init4.x = [Robots{4}.G(start,2); 
             Robots{4}.G(start,3); 
             Robots{4}.G(start,4)];
-init4.Sigma = 0.01*eye(3);
+init4.Sigma = 0.1*eye(3);
 
 init5 = [];
-init5.n = 50;
+init5.n = num_particles;
 init5.x = [Robots{5}.G(start,2); 
             Robots{5}.G(start,3); 
             Robots{5}.G(start,4)];
-init5.Sigma = 0.01*eye(3);
+init5.Sigma = 0.1*eye(3);
 
 filter_1 = particle_filter(r1_sys, init1);
 filter_2 = particle_filter(r2_sys, init2);
@@ -190,7 +198,7 @@ for i = start:end_idx
     end
     
     % Iterate through robots
-    for robot_num = 1:1
+    for robot_num = 1:num_robots
         % Check if robot is active yet / still active
 %         if(Robots{robot_num}.G(i) - t > 0.05)
 %             continue;
@@ -223,13 +231,13 @@ for i = start:end_idx
 %         end
         % Importance resample every q steps
         % TODO: tune q
-        if(mod(i, 100) == 0)
-            filters(robot_num).resampling();
-        end
+%         if(mod(i, 500) == 0)
+%             filters(robot_num).resampling();
+%         end
         wtot = sum(filters(robot_num).p.w);
         if wtot > 0
             
-            use_robot_gt = true;
+            use_robot_gt = false;
             
             % update state by sum and average particles
     %         disp(wtot)
@@ -244,9 +252,9 @@ for i = start:end_idx
             Robots{robot_num}.Est(i,:) = [t poseMean(1) poseMean(2) ...
                 poseMean(3)];
             if(use_robot_gt)
-                ROBOT_ESTIMATES(robot_num,:) = Robots{robot_num}.G(i,2:4);
+                ROBOT_ESTIMATES(robot_num,1:3) = Robots{robot_num}.G(i,2:4);
             else
-                ROBOT_ESTIMATES(robot_num,:) = [poseMean(1) poseMean(2) ...
+                ROBOT_ESTIMATES(robot_num,1:3) = [poseMean(1) poseMean(2) ...
                     poseMean(3)];
             end
         else
@@ -256,15 +264,22 @@ for i = start:end_idx
             Robots{robot_num}.Est(i,:) = [t nan(1,3)];
             %error = square_err(Robots{robot_num}.G, Robots{robot_num}.Est);
         end    
+        ROBOT_ESTIMATES(robot_num, 4) = ROBOT_ESTIMATES(robot_num, 4) + 1;
     end
     % Increment timestep
     t = t + 0.02;
 end
 
-% Animate results
-animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
-plot(square_err(Robots{1}.G(1000:75000,2:4), Robots{1}.Est(1000:75000,2:4)));
+%% Animate results
+%animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
 
+%% Plot error
+hold on
+for i = 1:5
+    plot(square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4)));
+    ylim([0, 5]);
+end
+hold off
 
 % Ask other robot location, their estimated accuracy rating (no. landmarks
 % in their view)
@@ -328,9 +343,9 @@ function [err] = square_err(groundtruth, estimate)
     len = size(groundtruth(:,1),1);
     err = zeros(len,1);
     for i = 1:len
-        j = i;
-        err(i) = sqrt((groundtruth(j,2) - estimate(j,2))^2 + ...
-            (groundtruth(j,3) - estimate(j,3))^2);
+        err(i) = sqrt((groundtruth(i,1) - estimate(i,1))^2 + ...
+        (groundtruth(i,2) - estimate(i,2))^2); %+ ...
+        %wrapToPi((groundtruth(i,3) - estimate(i,3)))^2);
     end
 end
   
@@ -345,8 +360,8 @@ function animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps,
     start_timestep = start_t;
 %     end_timestep = timesteps;
     end_timestep = end_t;
-    timesteps_per_frame = 30;
-    pause_time_between_frames=0.03; %[s]
+    timesteps_per_frame = 25;
+    pause_time_between_frames=0.02; %[s]
     draw_measurements = 0;
     % Options END %
 
@@ -361,7 +376,7 @@ function animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps,
     colour(4,:) = [1 0.50 0.25];
     colour(5,:) = [1 0.5 1];
     % Estimated Robot Colors
-    colour(6,:) = [0 1 0];
+    colour(6,:) = [.67 0 0];
     colour(7,:) = [0 0.5 0];
     colour(8,:) = [0 0 .67];
     colour(9,:) = [.67 0.33 0.17];
@@ -439,7 +454,7 @@ function animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps,
     clear tempIndex
     
     % animate robots groundtruth and pose estimates
-    pause(2);
+    pause(5);
     for k=start_timestep:end_timestep
         t = k*sample_time;
 

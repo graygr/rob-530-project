@@ -66,9 +66,19 @@ classdef particle_filter < handle
                 %v = normrnd(control(1), 0.005); % trans
                 % Max rot is 0.57
                 %w = normrnd(control(2), 0.05); % rot
-                v = normrnd(control(1), 0.05 + abs(0.8*control(1))); % trans
+                if(control(1) == 0)
+                    v_cmd = 0;
+                else
+                    v_cmd = 0.03 + abs(0.5*control(1));
+                end
+                if(control(2) == 0)
+                    w_cmd = 0.1;
+                else
+                    w_cmd = 0.07 + abs(0.3*control(2));
+                end
+                v = normrnd(control(1), v_cmd); % trans
                 % Max rot is 0.57
-                w = normrnd(control(2),  abs(0.8*control(2))); % rot
+                w = normrnd(control(2), w_cmd); % rot
                 
                 rot = w * dt;
                 trans = v * dt;
@@ -88,16 +98,15 @@ classdef particle_filter < handle
             num_observations = size(z(1,:),2);
 %             disp(num_observations);
             % If we only have 1 obs, then we can't accurately update w meas
-%             if(num_observations < 2)
+            if(num_observations < 2)
 %                 disp("Not enough observations, skipping update");
-%                 return
-%             end
+                return
+            end
             
             global FIELDINFO;
             global ROBOT_ESTIMATES;
             global MEAS_STATS;
-            % Measure how many >2 measurements we get
-            MEAS_STATS(robot_num, 3) = MEAS_STATS(robot_num, 3) + 1;
+            
             
             % x,y
             lm = zeros(num_observations,2);
@@ -109,29 +118,51 @@ classdef particle_filter < handle
                     lm(j,2) = FIELDINFO(z(3,j) - 5, 3);
                 else
                     % If robot, pull from current estimate
-                    lm(j,1) = ROBOT_ESTIMATES(z(3,j), 1);
-                    lm(j,2) = ROBOT_ESTIMATES(z(3,j), 2);
+                    % If more than 10 sec since last, don't trust
+                    if(ROBOT_ESTIMATES(z(3,j),4) > 500)
+                        % Skip update
+                        % TODO: 
+                        return;
+                    else
+                        lm(j,1) = ROBOT_ESTIMATES(z(3,j), 1);
+                        lm(j,2) = ROBOT_ESTIMATES(z(3,j), 2);
+                    end
                 end
             end
+            
+            % Measure how many >2 measurements we get
+            MEAS_STATS(robot_num, 3) = MEAS_STATS(robot_num, 3) + 1;
              
             w = ones(obj.n,1); % importance weights
-            for i = 1:obj.n
-                x_t = obj.p.x(1,i);
-                y_t = obj.p.x(2,i);
-                theta_t = obj.p.x(3,i);
+            
+            for j = 1:num_observations
+                w_prev = w;
+                if(lm(j,1) == -1)
+                    continue;
+                end
+                for i = 1:obj.n
+                    x_t = obj.p.x(1,i);
+                    y_t = obj.p.x(2,i);
+                    theta_t = obj.p.x(3,i);
                 
-                for j = 1:num_observations
                     % TODO: Tried limiting observations, see what happens
-                    
+                    if(z(1,j) < 0.1)
+                        continue;
+                    end
                     q = (lm(j,1) - x_t)^2 + (lm(j,2) - y_t)^2;
                     range_e = sqrt(q);
                     bearing_e = wrapToPi(atan2(lm(j,2) - y_t, lm(j,1) ...
                         - x_t) - theta_t);
 
                     range_error = z(1,j) - range_e;
+                    % Skip estimate if bad reading
+                    if range_error > 1.0 || abs(bearing_e) > pi/2
+                        w = w_prev;
+                        break;
+                    end
                     bearing_error = wrapToPi(z(2,j) - bearing_e);
-                    prob_range = mvnpdf(range_error, 0, 0.1);
-                    prob_bearing = mvnpdf(bearing_error, 0, 0.1);
+                    prob_range = mvnpdf(range_error, 0, 0.15);
+                    prob_bearing = mvnpdf(bearing_error, 0, 0.15);
                     w(i) = w(i) * (prob_range * prob_bearing);
                 end
             end
@@ -143,7 +174,8 @@ classdef particle_filter < handle
 %             disp(w)
 
             % If we lose localization, spread weights and cross fingers
-            if(sum(obj.p.w) == 0)
+%             disp(w);
+            if(sum(obj.p.w) == 0 || isnan(obj.p.w(1)))
                 obj.p.w = ones(obj.n,1);
                 obj.p.w = obj.p.w ./ sum(obj.p.w);
             end
@@ -156,6 +188,9 @@ classdef particle_filter < handle
             for i = 1:obj.n
                 obj.p.x(:,i) = obj.p.x(:,new_idx(i));
             end
+            
+            % Set time since last update to 0
+            ROBOT_ESTIMATES(robot_num, 4) = 0;
 
             % compute effective number of particles
 %             obj.Neff = 1 / sum(obj.p.w.^2);
