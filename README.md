@@ -1,1 +1,18 @@
-# rob-530-project
+# Multi-Robot Localization with Relative Observations Gated by Trust Factor
+Cameron Kabacinski, Huashu Li, Gregor Limstrom
+
+For NAVARCH 568 / ROB 530 Final Project
+
+Description of project
+
+Sources and results
+
+Link to Presentation: <TODO>[]()
+
+Link to Presentation Slides: [Link](https://docs.google.com/presentation/d/1VIBYjhWs4f2Vct2t7GQAV90KE2pGuMCUh0T6ZfCsncY/edit?usp=sharing)
+
+# Environment Setup
+
+# Dataset
+
+# Usage
