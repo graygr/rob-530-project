@@ -7,8 +7,10 @@ classdef EKF < handle
         Gfun;           % Motion Model Jacobian with respect to state
         Vfun;           % Motion Model Jacobian with respect to control inputs
         Hfun;           % Measruement Model Jacobian
+        qfun;           % noise covariance function respective to motion commands
         M;              % Noise Covariance in input measruements(This is dynamical, changes with the input values)
         Q;              % Sensor Noise Covariance
+        q;              % sensor noise covariance from qfun
         mu_pred;        % Predictied Mean after prediction step
         Sigma_pred;     % Predictied Covarince after prediction step
     end
@@ -28,6 +30,7 @@ classdef EKF < handle
             obj.M = sys.M;
             % measurement noise covariance
             obj.Q = sys.Q;
+            obj.qfun = sys.qfun;
             % initial mean and covariance
             obj.mu = init.mu;
             obj.Sigma = init.Sigma;
@@ -38,6 +41,7 @@ classdef EKF < handle
             obj.mu_pred = obj.gfun(obj.mu, u); %Predicted mean
             obj.Sigma_pred = obj.Gfun(obj.mu, u) * obj.Sigma *obj.Gfun(obj.mu, u)' + ...
                 obj.Vfun(obj.mu, u) * obj.M(u) * obj.Vfun(obj.mu, u)'; %predicted covariance
+            obj.q = obj.qfun(u);
         end
         
         function setPredictionAsCurrent(obj)
@@ -72,6 +76,7 @@ classdef EKF < handle
                 Hi = obj.Hfun(xObs,yObs, obj.mu_pred, z_hati);
                 H = [H; Hi];
                 Qblk = blkdiag(Qblk, obj.Q);
+%                 Qblk = blkdiag(Qblk, obj.q);
             end
     
             S = H* obj.Sigma_pred * H' + Qblk;

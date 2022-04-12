@@ -1,4 +1,4 @@
-function sys = system_initialization(alphas, beta, deltaT)
+function sys = system_initialization(alphas, betaStatic, betaDynamic, deltaT)
 sys.gfun = @(mu, u) [...
     mu(1) + (-u(1) / u(2) * sin(mu(3)) + u(1) / u(2) * sin(mu(3) + u(2)*deltaT));
     mu(2) + ( u(1) / u(2) * cos(mu(3)) - u(1) / u(2) * cos(mu(3) + u(2)*deltaT));
@@ -14,8 +14,12 @@ sys.M = @(u) [...
     0, 0, alphas(5)*u(1)^2+alphas(6)*u(2)^2];
 
 sys.Q = [...
-        beta(1)^2,    0;
-        0,      beta(2)^2];
+        betaStatic(1)^2,    0;
+        0,      betaStatic(2)^2];
+
+sys.qfun = @(u) [...
+        betaDynamic(1)*u(1)^2+betaDynamic(2)*u(2)^2,    0;
+        0,      betaDynamic(3)*u(1)^2+betaDynamic(4)*u(2)^2];
 
 sys.W = diag([0.05^2, 0.1^2, 0.1^2]);
 

@@ -5,50 +5,106 @@
 
 clc;
 close all;
-clearvars -except mainFilePath 
-% Set pwd
-if ~exist('mainFilePath')
-    mainFilePath = pwd;
+clearvars;
+srcFolderPath = pwd;
+cd("../");
+topLevelPath = pwd;
+cd("collectedData");
+collectedDataPath = pwd;
+
+runDataFolders = ["MRCLAM1" "MRCLAM9"];
+
+for currDataIndex=1:length(runDataFolders)
+    cd(topLevelPath)
+    clearvars -except currDataIndex srcFolderPath topLevelPath collectedDataPath runDataFolders
+    close all
+    %Load and sample data
+    cmd = strcat('run(''data\', runDataFolders(currDataIndex), '\loadMRCLAMdataSet.m'');');
+    eval(cmd);
+    run('Tools\sampleMRCLAMdataSet.m')
+    % run('Tools\animateMRCLAMdataSet.m') % Animate data
+    cd(srcFolderPath)
+    
+    % EKF filter for localization
+    robotsToRun = [1 2 3 4 5];
+    numSteps = 2000;%length(Robot1_Groundtruth); %number of steps from dataset to run
+    plotStatistics = false;
+    plotObservationLines = [false false false]; %show when observations were used in the [x y theta] plots
+    % The measurements may have the wrong landmark! Ignore
+    % the observation if the perceived landmark range and
+    % bearing is more than landmarkDistanceThreshold 
+    landmarkDistanceThreshold = 1.0; 
+    alphas = [  0.25 0.05 ...
+                0.25 0.5 ...
+                0.25 0.05].^2;
+    beta = [deg2rad(25) 25];
+    
+    % Collect data on localizing with landmarks and robot ground truth
+    useObservationsToCorrect = true;
+    useLandmarksOnly = false;
+    useGTForObservedRobots = true;
+    useEstimateForObservedRobots = ~useGTForObservedRobots;
+    run('runEKF.m');
+    cd(collectedDataPath);
+    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksAndRobotGT.mat");');
+    eval(cmd);
+    cd(srcFolderPath);
+    
+    %Collect data on localizing with landmark data only
+    useLandmarksOnly = true;
+    run('runEKF.m');
+    cd(collectedDataPath);
+    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksOnly.mat");');
+    eval(cmd);
+    cd(srcFolderPath);
+    
+    % Collect data on localizing by predicition only
+    useObservationsToCorrect = false;
+    run('runEKF.m');
+    cd(collectedDataPath);
+    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_predictionOnly.mat");');
+    eval(cmd);   
+    cd(srcFolderPath);
+    
 end
-% change directory to top level so we can access data
-cd("../")
-%% Import data from MRCLAM_9 - Defunct, they provide load and sample code
-% Load data
+
+
+
+
+
+
+%%
+
+%%
+      
+% run('runEKF.m');
+% save("CLAM1_correctionsUsingGt.mat");
+% useObservationsToCorrect = false;
+% run('runEKF.m');
+% save("CLAM1_predictionOnly.mat");
+% 
+% 
+% % now run the other dataset
+% close all;
+% clearvars -except mainFilePath topLevel alphas beta landmarkDistanceThreshold plotObservationLines ...
+%     robotsToRun useGTForObservedRobots plotStatistics
+% 
+% cd(topLevel);
 % run('data\MRCLAM9\loadMRCLAMdataSet.m')
-run('data\MRCLAM1\loadMRCLAMdataSet.m')
-
-% Sample data
-run('Tools\sampleMRCLAMdataSet.m')
-
-%% Animate data
-%run('Tools\animateMRCLAMdataSet.m')
+% run('Tools\sampleMRCLAMdataSet.m')
+% cd(mainFilePath)
+% 
+% numSteps = length(Robot1_Groundtruth); %number of steps from dataset to run
+% 
+% useObservationsToCorrect = true;
+% 
+% run('runEKF.m');
+% save("CLAM1_correctionsUsingGt.mat");
+% useObservationsToCorrect = false;
+% run('runEKF.m');
+% save("CLAM1_predictionOnly.mat");
+% 
 
  
-cd(mainFilePath)
-%% EKF filter for localization
-close all;
-robotsToRun = [1 2 3 4 5];
-% robotsToRun = [5 ];
-% Makes an assumption that updates should keep the robot close to where its
-% previus pose was, but this is flawed because if we drift away then we
-% have no hopes to recover, so there should be a smarter way to decide if
-% we reject or accept an update...
-rejectDistanceThreshold = 0.3;
-numSteps = 8000;%length(Robot1_Groundtruth)/8; %number of steps from dataset to run
-useGTForObservedRobots = true;
-useObservationsToCorrect = true;
-plotStatistics = false;
-beta(1) = deg2rad(25);
-beta(2) = 1.2;%0.3;
 
-run('runEKF.m');
-useObservationsToCorrect = false;
-run('runEKF.m');
-
-% Update based on measurements of landmarks and other robots
-
-% Ask other robot location, their estimated accuracy rating (no. landmarks
-% in their view)
-% % Some chance of failure (packet loss)
-% % 
  

@@ -1,15 +1,5 @@
 
-
-% robotsToRun = [1 2 3 4 5];
-% robotsToRun = [1 ];
-% rejectDistanceThreshold = 0.35;
-% numSteps = 8000;%length(Robot1_Groundtruth)/8; %number of steps from dataset to run
-% useGTForObservedRobots = true;
-% useObservationsToCorrect = true;
-%options if you want to show the time steps when observations were used in the [x y theta] plots
-plotObservationLines = [false false false]; 
-plotSigmaEllipses = false;
-% plotStatistics = true;
+% plotSigmaEllipses = false;
 
 disp("Running EKF with robots:");
 disp(robotsToRun);
@@ -18,9 +8,9 @@ waitbar_h = waitbar(0,'Waitbar');
 
 %Assume for now that all robots will use same alphas and beta
 % Motion noise (in odometry space, see Table 5.5, p.134 in book).
-alphas = [  0.25 0.05 ...
-            0.25 0.5 ...
-            0.25 0.05].^2; % variance of noise proportional to alphas
+% alphas = [  0.25 0.05 ...
+%             0.25 0.5 ...
+%             0.25 0.05].^2; % variance of noise proportional to alphas
 % alphas = [  0.00025 0.00005 ...
 %             0.0025 0.05 ...
 %             0.0025 0.0005].^2; % variance of noise proportional to alphas
@@ -40,7 +30,7 @@ for i=1:length(robotsToRun)
     %name and tack on their id
     eval(['initialStateMean' num2str(id) ' = Robot' num2str(id) '_Groundtruth(1,2:end)'';'])
     eval(['initialStateCov' num2str(id) ' = eye(3);'])
-    sys = system_initialization(alphas, beta, deltaT);
+    sys = system_initialization(alphas,  beta,  [0 0 0 0], deltaT);
     systems{i} = sys;
     eval(['filters{i}=filter_initialization(sys,  initialStateMean' num2str(id) ',  initialStateCov' num2str(id) ', "EKF", deltaT);'])
     
@@ -48,10 +38,9 @@ for i=1:length(robotsToRun)
     eval(['robotPose' num2str(id) ' = zeros(numSteps,3);'])
     eval(['robotSigmas' num2str(id) ' = {};'])
     eval(['lastvalidMeasurementIndex' num2str(id) ' = 1;'])
-    eval(['rejectedUpdates' num2str(id) ' = 0;'])
-    if plotStatistics
-        eval(['results' num2str(id) ' = zeros(8,numSteps);'])
-    end 
+%     eval(['rejectedUpdates' num2str(id) ' = 0;'])
+    eval(['countBadObservationIDMismatch' num2str(id) ' = 0;'])    
+    eval(['results' num2str(id) ' = zeros(8,numSteps);'])
 end
 
 % subect number ids are barcode values, and need to be mapped to which
@@ -67,6 +56,10 @@ yValueSet = Landmark_Groundtruth(:,3);
 landmarkIDToXMAP = containers.Map(keySet2,xValueSet);
 landmarkIDToYMAP = containers.Map(keySet2,yValueSet);
 
+landmarkDistanceThresholdSquared = landmarkDistanceThreshold^2;
+
+observationsDiff = [];
+observationsDiffIndex = 1;
 %%
 lastPerc = 0;
 for t = 1:numSteps
@@ -85,7 +78,7 @@ for t = 1:numSteps
         eval(['noiseFreeMotionCommand(1:2) = Robot' num2str(id) '_Odometry(t,2:3);'])
 
         % [Trans_vel,Angular_vel,gamma]' noisy control command
-        noisyMotionCommand = sampleOdometry(noiseFreeMotionCommand,alphas);
+        noisyMotionCommand = sampleOdometry(noiseFreeMotionCommand,alphas);        
         %add a small amount of noise so that v,w are never exactly zero
         noisyMotionCommand = noisyMotionCommand + 0.0001.*randn(size(noisyMotionCommand));
     
@@ -103,10 +96,7 @@ for t = 1:numSteps
         eval(['endMeasurementIndex = size(Robot' num2str(id) '_Measurement,1);'])
         for j=lastvalidMeasurementIndex:endMeasurementIndex
             eval(['measurementTime = Robot' num2str(id) '_Measurement(j,1);'])
-    %         msg = ['J:',num2str(j),' CurrTime: (',num2str(t),',',num2str(currTime),') MeasureTime: ',num2str(measurementTime)];
-    %         disp(msg);
             if abs(measurementTime - currTime) <= 0.001
-
                 eval(['measurements(measurementsIndex,:) = Robot' num2str(id) '_Measurement(j,2:end);'])
                 measurementsIndex = measurementsIndex + 1;
             elseif measurementTime > currTime
@@ -124,63 +114,100 @@ for t = 1:numSteps
         %                      yglobalpos1, yglobalpos2,... 
         %                      observed landmark/robot id1, "" id2
         %                      subject barcode id1, "" id2]
+        myPose = filters{i}.mu;
         observations = [];
         obsCol = 1;
-        if ~isempty(measurements)     
+        if ~isempty(measurements) &&  useObservationsToCorrect    
             for j=1:size(measurements,1)
+                if ~isKey(subjectNumToIDMAP,measurements(j,1))
+                    continue
+                end
                 idObserved = subjectNumToIDMAP(measurements(j,1));
-                if idObserved < 6
-                    %for now we are testing EKF with being able to get the
-                    %exact position (ground truth) of observed robots and landmarks
+                measuredBearing = measurements(j,3);
+                measuredRange = measurements(j,2);
+                if (idObserved < 6) && ~useLandmarksOnly
                     if useGTForObservedRobots
         %                 disp(['observed robot: ',num2str(id)])
                         eval(['gt = Robot' num2str(idObserved) '_Groundtruth(' num2str(t) ',1:4);'])
                         if (gt(1) ~= currTime)
                             error("GT time of observed robot does not match curr time.");
                         end
-                        observations(1, obsCol) = measurements(j,3); %get bearing from measurment
-                        observations(2, obsCol) = measurements(j,2); %get range from measurment
+                        observations(1, obsCol) = measuredBearing; %get bearing from measurment
+                        observations(2, obsCol) = measuredRange; %get range from measurment
                         observations(3, obsCol) = gt(2); %get x global pos of observed id
                         observations(4, obsCol) = gt(3); %get y global pos of observed id
                         observations(5, obsCol) = idObserved; %observed id
                         observations(6, obsCol) = measurements(j,1); %barcode id
                         obsCol = obsCol +1;
+                    elseif useEstimateForObservedRobots
+                        eval(['obsRobotEstimate = robotPose' num2str(id) '(t-1,:);'])
+                        observations(1, obsCol) = measuredBearing; %get bearing from measurment
+                        observations(2, obsCol) = measuredRange; %get range from measurment
+                        observations(3, obsCol) = obsRobotEstimate(1); %get x global pos of observed id
+                        observations(4, obsCol) = obsRobotEstimate(2); %get y global pos of observed id
+                        observations(5, obsCol) = idObserved; %observed id
+                        observations(6, obsCol) = measurements(j,1); %barcode id
+                        obsCol = obsCol +1;
+                        
                     else
-                        error("Not setup for other than GT positions");
+                        error("Not setup for this method of observing other robots");
                     end
 
-                else
+                elseif (idObserved >= 6)
     %                 disp(['observed landmark: ',num2str(id)])
-                    observations(1, obsCol) = measurements(j,3); %get bearing from measurment
-                    observations(2, obsCol) = measurements(j,2); %get range from measurment
-                    observations(3, obsCol) = landmarkIDToXMAP(idObserved); %get x global pos of observed id
-                    observations(4, obsCol) = landmarkIDToYMAP(idObserved); %get y global pos of observed id
+                    % The measurements may have the wrong landmark! Ignore
+                    % the observation if the perceived landmark range and
+                    % bearing is more than landmarkDistanceThreshold 
+                    
+                    x1 = myPose(1) + measuredRange*cos(measuredBearing + myPose(3));
+                    y1 = myPose(2) + measuredRange*sin(measuredBearing + myPose(3));
+                    landmarkX = landmarkIDToXMAP(idObserved);
+                    landmarkY = landmarkIDToYMAP(idObserved);
+                    
+                    distanceSquared = (landmarkX-x1)^2+(landmarkY-y1)^2;
+                    if distanceSquared > landmarkDistanceThresholdSquared
+%                         disp("Warning, observed landmark id position does not agree with range/bearing measurement");
+                        eval(['countBadObservationIDMismatch' num2str(id) ...
+                            ' = countBadObservationIDMismatch' num2str(id) ' + 1;'])
+                        continue;
+                    end
+                    
+                    observations(1, obsCol) = measuredBearing; %get bearing from measurment
+                    observations(2, obsCol) = measuredRange; %get range from measurment
+                    observations(3, obsCol) = landmarkX; %get x global pos of observed id
+                    observations(4, obsCol) = landmarkY; %get y global pos of observed id
                     observations(5, obsCol) = idObserved; %observed id
                     observations(6, obsCol) = measurements(j,1); %barcode id
                     obsCol = obsCol +1;
                 end
+%                 %Debugging observation issues
+%                 eval(['mygt = Robot' num2str(id) '_Groundtruth(' num2str(t) ',1:4);'])
+%                 gtx = mygt(2);
+%                 gty = mygt(3);
+%                 gtt = mygt(4);
+%                 obsx = observations(3, obsCol-1);
+%                 obsy = observations(4, obsCol-1);
+%                 deltaX = (obsx-gtx);
+%                 deltaY = (obsy-gty);
+%                 actualBearing = wrapToPi(atan2(deltaY,deltaX)-gtt);
+%                 actualRange = sqrt(deltaX^2+deltaY^2);
+%                 diffBearing = wrapToPi(observations(1, obsCol-1) - actualBearing);
+%                 diffRange = observations(2, obsCol-1) - actualRange;
+%                 mat = [t measuredBearing actualBearing diffBearing ...
+%                     measuredRange actualRange diffRange ...
+%                     deltaX deltaY ...
+%                     gtx gty gtt obsx obsy ];
+%                 observationsDiff(observationsDiffIndex, 1:length(mat)) =mat;
+%                 observationsDiffIndex = observationsDiffIndex + 1;
             end
 
         end
-        observationsAvailable =  size(observations,2)>=2;%~isempty(observations) &&
-
-        %if there is no motion command, then the robot should not be moving so
-        %don't update filter
-        % this may violate some dyanmics due to inertia, but should be fine
-    %     zeroThreshold = 0.001;
-    %     if ((abs(noiseFreeMotionCommand(1)) <= zeroThreshold) && ...
-    %         (abs(noiseFreeMotionCommand(2)) <= zeroThreshold))
-    %         %no motion
-    %         robot1Pose(t,:)= filter.mu(1:3)';
-    %         %countContinue = countContinue + 1;
-    %         continue;
-    %     end
+        %There must be at least two observations for proper dimensions in correction 
+        observationsAvailable =  size(observations,2)>=2;
     
-       %we assume that prediction step will usually be decent, so we only
-       %want to guarda gainst a bad correction step
        filters{i}.prediction(noisyMotionCommand);
-       muPrev = filters{i}.mu_pred;
-       sigmaPrev = filters{i}.Sigma_pred;
+%        muPrev = filters{i}.mu_pred;
+%        sigmaPrev = filters{i}.Sigma_pred;
        
        if observationsAvailable && useObservationsToCorrect
            eval(['observationsUsedatIndex' num2str(id) ' = [observationsUsedatIndex' num2str(id) ' t];'])
@@ -188,24 +215,21 @@ for t = 1:numSteps
        else
            filters{i}.setPredictionAsCurrent();
        end
-       muAfter = filters{i}.mu;
+%        muAfter = filters{i}.mu;
        
-       distance = sqrt((muPrev(1)-muAfter(1))^2+(muPrev(2)-muAfter(2))^2);
-       if distance >= rejectDistanceThreshold
-%            disp("Too large of jump, using mu/sigma before update");
-           eval(['rejectedUpdates' num2str(id) ' = rejectedUpdates' num2str(id) '+1;'])
-           filters{i}.mu = muPrev;
-           filters{i}.Sigma = sigmaPrev;
-       end
+%        distance = sqrt((muPrev(1)-muAfter(1))^2+(muPrev(2)-muAfter(2))^2);
+%        if distance >= rejectDistanceThreshold
+% %            disp("Too large of jump, using mu/sigma before update");
+%            eval(['rejectedUpdates' num2str(id) ' = rejectedUpdates' num2str(id) '+1;'])
+%            filters{i}.mu = muPrev;
+%            filters{i}.Sigma = sigmaPrev;
+%        end
        
        eval(['robotPose' num2str(id) '(t,:) = filters{i}.mu(1:3)'';'])
        eval(['robotSigmas' num2str(id) '{t} = filters{i}.Sigma;'])
        eval(['GTMu = Robot' num2str(id) '_Groundtruth(t,2:4)'';'])
-       
        eval(['results' num2str(id) '(:,t) = mahalanobis(filters{i}.mu,filters{i}.Sigma,GTMu);'])
-
     end
-    
 end
 toc;
 close(waitbar_h);
@@ -213,56 +237,95 @@ close(waitbar_h);
 disp("Plotting results");
 tic;
 
-% close all;
 numSteps = t;
 for i=1:length(robotsToRun)
     id = robotsToRun(i);
-    
-    
-
-    figure('units','normalized','outerposition',[0 0 1 1])
-    if useObservationsToCorrect
-        msg = ['Robot: ' num2str(id) ' EKF with prediction and correction'];
-        sgtitle(msg);
-        disp(msg);
-    else
-        msg = ['Robot: ' num2str(id) ' EKF with prediction only'];
-        sgtitle(msg);
-        disp(msg);
-    end
-    eval(['numRejected = rejectedUpdates' num2str(id) ';'])
-    disp(['Robot: ' num2str(id) ' had ' num2str(numRejected) ' rejected updates.']);
-    
-    subplot(2,2,1);
-    title("Robot x,y over time");
-    hold on;
+%     eval(['numRejected = rejectedUpdates' num2str(id) ';'])
+    disp(['Robot ' num2str(id) ':']);
     
     robotEstimatedXdata = [];
     robotEstimatedYdata = [];
     robotEstimatedTdata = [];
+    robotSigmas = {};
+    sigmaDiags = [];
     robotGTXdata = [];
     robotGTYdata = [];
     robotGTTdata = [];
     observationsUsedatIndex = [];
+    robotVCommands = [];
+    robotWCommands = [];
     eval(['robotEstimatedXdata = robotPose' num2str(id) '(1:numSteps,1);'])
     eval(['robotEstimatedYdata = robotPose' num2str(id) '(1:numSteps,2);'])
     eval(['robotEstimatedTdata = robotPose' num2str(id) '(1:numSteps,3);'])
+    eval(['robotSigmas = robotSigmas' num2str(id) ';'])
     eval(['robotGTXdata = Robot' num2str(id) '_Groundtruth(1:numSteps,2);'])
     eval(['robotGTYdata = Robot' num2str(id) '_Groundtruth(1:numSteps,3);'])
     eval(['robotGTTdata = Robot' num2str(id) '_Groundtruth(1:numSteps,4);'])
     eval(['observationsUsedatIndex = observationsUsedatIndex' num2str(id) ';'])
+    eval(['robotVCommands = Robot' num2str(id) '_Odometry(1:numSteps,2);'])
+    eval(['robotWCommands = Robot' num2str(id) '_Odometry(1:numSteps,3);'])
+    eval(['countBadObservationIDMismatch = countBadObservationIDMismatch' num2str(id) ';'])
     
-    plot(robotEstimatedXdata,robotEstimatedYdata,'r.-');
-    plot(robotGTXdata,robotGTYdata,'b.-');
-    if plotSigmaEllipses
-        for j=1:numSteps
-            eval(['sigma=robotSigmas' num2str(id) '{j};'])
-            draw_ellipse([robotEstimatedXdata(j);robotEstimatedYdata(j)], sigma(1:2,1:2),1);
+    for j=1:length(robotSigmas)
+        sigmaDiags(:,j) = diag(robotSigmas{j});
+    end
+    
+
+    figure('units','normalized','outerposition',[0 0 1 1])
+    if useObservationsToCorrect
+        if useLandmarksOnly
+            msg = ['Robot: ' num2str(id) ' EKF with prediction and correction from landmarks only'];
+            sgtitle(msg);
+            if i == 1
+                disp('EKF with prediction and correction from landmarks only');
+            end
+            
+        elseif useGTForObservedRobots && ~useLandmarksOnly
+            msg = ['Robot: ' num2str(id) ' EKF with prediction and correction from gt robots and landmarks'];
+            sgtitle(msg);
+            if i == 1
+                disp('EKF with prediction and correction from gt robots and landmarks');
+            end
+        else
+            msg = ['Robot: ' num2str(id) ' EKF with prediction and correction from est'];
+            sgtitle(msg);
+            if i == 1
+                disp('EKF with prediction and correction from est');
+            end
+        end
+        
+    else
+        msg = ['Robot: ' num2str(id) ' EKF with prediction only'];
+        sgtitle(msg);
+        if i == 1
+            disp('EKF with prediction only');
         end
     end
+%     disp([num2str(numRejected) ' rejected updates.']);
+    if countBadObservationIDMismatch ~= 0
+        disp([num2str(countBadObservationIDMismatch) ' bad landmark id observations.']);
+    end
+    
+    rows = 2;
+    cols = 2;
+    currSubplot = 1;
+    
+    subplot(rows,cols,currSubplot);
+    currSubplot = currSubplot + 1;
+    title("Robot x,y over time");
+    hold on;
+    plot(robotEstimatedXdata,robotEstimatedYdata,'r.-');
+    plot(robotGTXdata,robotGTYdata,'b.-');
+%     if plotSigmaEllipses
+%         for j=1:numSteps
+%             eval(['sigma=robotSigmas' num2str(id) '{j};'])
+%             draw_ellipse([robotEstimatedXdata(j);robotEstimatedYdata(j)], sigma(1:2,1:2),1);
+%         end
+%     end
     legend('Estimated pose','GroundTruth');
 
-    subplot(2,2,2);
+    subplot(rows,cols,currSubplot);
+    currSubplot = currSubplot + 1;
     title("theta data vs time");
     hold on;
     plot(1:numSteps,robotEstimatedTdata,'r.-');
@@ -273,7 +336,8 @@ for i=1:length(robotsToRun)
         end
     end
     
-    subplot(2,2,3);
+    subplot(rows,cols,currSubplot);
+    currSubplot = currSubplot + 1;
     title("Xdata vs time");
     hold on;
     plot(1:numSteps,robotEstimatedXdata,'r.-');
@@ -284,7 +348,8 @@ for i=1:length(robotsToRun)
         end
     end
     
-    subplot(2,2,4);
+    subplot(rows,cols,currSubplot);
+    currSubplot = currSubplot + 1;
     title("Ydata vs time");
     hold on;
     plot(1:numSteps,robotEstimatedYdata,'r.-');
@@ -294,11 +359,24 @@ for i=1:length(robotsToRun)
             xline(observationsUsedatIndex(j));
         end
     end
+    
+%     subplot(rows,cols,currSubplot);
+%     currSubplot = currSubplot + 1;
+%     title("V command vs time");
+%     hold on;
+%     plot(1:numSteps,robotVCommands,'b.-');
+%     
+%     subplot(rows,cols,currSubplot);
+%     currSubplot = currSubplot + 1;
+%     title("W command vs time");
+%     hold on;
+%     plot(1:numSteps,robotWCommands,'b.-');
+    
 
     eval(['results = results' num2str(id) ';'])
     distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
     stdDeviation = std(results(8,1:numSteps));
-    disp(['Robot ' num2str(id) ': distance RMSE[' num2str(distanceRMSE) '] std deviation[' num2str(stdDeviation) '].']);
+    disp(['distance RMSE [' num2str(distanceRMSE) '] std deviation [' num2str(stdDeviation) '].']);
         
     if plotStatistics
         figure('units','normalized','outerposition',[0 0 1 1]);
