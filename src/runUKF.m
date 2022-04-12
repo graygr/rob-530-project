@@ -39,16 +39,16 @@ filter4 = UKF(sys, init4);
 filter5 = UKF(sys, init5);
 
 global ROBOT1 ROBOT2 ROBOT3 ROBOT4 ROBOT5 LANDMARK BAR
-% ROBOT1 = Robot1_Groundtruth;
-% ROBOT2 = Robot2_Groundtruth;
-% ROBOT3 = Robot3_Groundtruth;
-% ROBOT4 = Robot4_Groundtruth;
-% ROBOT5 = Robot5_Groundtruth;
-ROBOT1 = filter1;
-ROBOT2 = filter2;
-ROBOT3 = filter3;
-ROBOT4 = filter4;
-ROBOT5 = filter5;
+ROBOT1 = Robot1_Groundtruth;
+ROBOT2 = Robot2_Groundtruth;
+ROBOT3 = Robot3_Groundtruth;
+ROBOT4 = Robot4_Groundtruth;
+ROBOT5 = Robot5_Groundtruth;
+% ROBOT1 = filter1;
+% ROBOT2 = filter2;
+% ROBOT3 = filter3;
+% ROBOT4 = filter4;
+% ROBOT5 = filter5;
 BAR = Barcodes;
 LANDMARK = Landmark_Groundtruth;
 
@@ -138,7 +138,7 @@ plot(0:0.02:(nsteps-1)*0.02, error1, 0:0.02:(nsteps-1)*0.02, error2, 0:0.02:(nst
 xlabel('Time(s)');
 ylabel('Distance(m)');
 legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
-title('Distance Error(UKF using landmark and robot estimates)');
+title('Distance Error(UKF)');
 axis([0 1500 0 3]);
 
 figure(2);
@@ -146,4 +146,4 @@ plot(0:0.02:(nsteps-1)*0.02, angle_error1, 0:0.02:(nsteps-1)*0.02, angle_error2,
 xlabel('Time(s)');
 ylabel('Angle(rad)');
 legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
-title('Angle Error(UKF using landmark and robot estimates)');
+title('Angle Error(UKF)');
