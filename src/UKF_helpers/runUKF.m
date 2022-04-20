@@ -66,7 +66,15 @@ end
 BAR = Barcodes;
 LANDMARK = Landmark_Groundtruth;
 
+waitbar_h = waitbar(0,'Waitbar UKF');
+lastPerc = 0;
 for t = 1:numSteps
+    perc = t/numSteps;
+    if (abs(perc-lastPerc)>.01)
+        lastPerc = perc;
+        waitbar(perc,waitbar_h,sprintf('%f%% along UKF...',perc*100))
+    end
+    
     % Robot1 Prediction & Correction
     motionCommand1 = Robot1_Odometry(t, 2:3);
     filter1.prediction(motionCommand1);
@@ -157,7 +165,7 @@ for t = 1:numSteps
     Robot5_Correction(t,:) = filter5.mu;
     results5UKF(:, t) = mahalanobis(filter5.mu, filter5.Sigma, Robot5_Groundtruth(t, 2:4)');
 end
-
+close(waitbar_h);
 
 % error1 = sqrt((Robot1_Correction(1:numSteps,1)-Robot1_Groundtruth(1:numSteps,2)).^2+(Robot1_Correction(1:numSteps,2)-Robot1_Groundtruth(1:numSteps,3)).^2);
 % error2 = sqrt((Robot2_Correction(1:numSteps,1)-Robot2_Groundtruth(1:numSteps,2)).^2+(Robot2_Correction(1:numSteps,2)-Robot2_Groundtruth(1:numSteps,3)).^2);
