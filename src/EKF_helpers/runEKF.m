@@ -35,7 +35,7 @@ for i=1:length(robotsToRun)
     eval(['numLandmarksObsUsed' num2str(id) ' = 0;'])   
     eval(['numRobotObsUsed' num2str(id) ' = 0;'])   
     eval(['numUpdatesUsed' num2str(id) ' = 0;'])    
-    eval(['results' num2str(id) ' = zeros(8,numSteps);'])
+    eval(['results' num2str(id) 'EKF = zeros(8,numSteps);'])
     
     eval(['tStepLastUpdate' num2str(id) ' = 0;'])   
     eval(['rejectedDueToTrustTStep' num2str(id) ' = 0;'])    
@@ -273,7 +273,7 @@ for t = 1:numSteps
        eval(['robotPose' num2str(id) '(t,:) = filters{i}.mu(1:3)'';'])
        eval(['robotSigmas' num2str(id) '{t} = filters{i}.Sigma;'])
        eval(['GTMu = Robot' num2str(id) '_Groundtruth(t,2:4)'';'])
-       eval(['results' num2str(id) '(:,t) = mahalanobis(filters{i}.mu,filters{i}.Sigma,GTMu);'])
+       eval(['results' num2str(id) 'EKF(:,t) = mahalanobis(filters{i}.mu,filters{i}.Sigma,GTMu);'])
     end
 end
 toc;
@@ -421,7 +421,7 @@ for i=1:length(robotsToRun)
 %     plot(1:numSteps,robotWCommands,'b.-');
     
 
-    eval(['results = results' num2str(id) ';'])
+    eval(['results = results' num2str(id) 'EKF;'])
     distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
     stdDeviation = std(results(8,1:numSteps));
     disp(['distance RMSE [' num2str(distanceRMSE) '] std deviation [' num2str(stdDeviation) '].']);
@@ -497,7 +497,7 @@ numSteps = t;
 for i=1:length(robotsToRun)
     id = robotsToRun(i);
     eval(['rejectedDueToTrustTStep' num2str(id) ''])
-    eval(['results = results' num2str(id) ';'])
+    eval(['results = results' num2str(id) 'EKF;'])
     plot(1:numSteps,results(8,1:numSteps));   
     eval(['numLandmarksObsUsed' num2str(id) ''])   
     eval(['numRobotObsUsed' num2str(id) ' '])   

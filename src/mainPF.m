@@ -37,6 +37,8 @@ run('data\MRCLAM1\loadMRCLAMdataSetPF.m')
 dt = 0.02;
 [Robots, timesteps] = sampleMRCLAMdataSetPF(Robots, 0.02);
 
+cd(srcFolderPath)
+
 % Set field info to landmark GT
 global FIELDINFO;
 FIELDINFO = Landmark_Groundtruth;
@@ -249,24 +251,24 @@ close(waitbar_h);
 %animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
 
 %% Plot error
-results_1PF = zeros(8, numSteps);
-results_2PF = zeros(8, numSteps);
-results_3PF = zeros(8, numSteps);
-results_4PF = zeros(8, numSteps);
-results_5PF = zeros(8, numSteps);
+results1PF = zeros(8, numSteps);
+results2PF = zeros(8, numSteps);
+results3PF = zeros(8, numSteps);
+results4PF = zeros(8, numSteps);
+results5PF = zeros(8, numSteps);
 
 % hold on
 for i = 1:5
     if i == 1
-        results_1PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results1PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 2
-        results_2PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results2PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 3
-        results_3PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results3PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 4
-        results_4PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results4PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 5
-        results_5PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results5PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     end
 %         plot(square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4)));
 %     ylim([0, 5]);
