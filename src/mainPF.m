@@ -241,7 +241,7 @@ results_3_PF = zeros(8, numSteps);
 results_4_PF = zeros(8, numSteps);
 results_5_PF = zeros(8, numSteps);
 
-hold on
+% hold on
 for i = 1:5
     if i == 1
         results_1_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
@@ -257,7 +257,7 @@ for i = 1:5
 %         plot(square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4)));
 %     ylim([0, 5]);
 end
-hold off
+% hold off
 
 % Ask other robot location, their estimated accuracy rating (no. landmarks
 % in their view)
