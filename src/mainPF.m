@@ -1,11 +1,14 @@
 % File: mainPF.m
 % Author: Gregor Limstrom <limstrom@umich.edu>
 % Purpose: Open data and explore format for 530 project
-clc;clear; close all;
-
+% Note - right click on mainPF.m to change directory to that in order to
+% work properly
+% 
+% clc;clear; close all;
 
 srcFolderPath = pwd;
 addpath PF_helpers
+addpath(srcFolderPath)
 cd("../");
 topLevelPath = pwd;
 
@@ -13,6 +16,13 @@ cd(topLevelPath)
 
 %% Load data from MRCLAM9
 %run('data\MRCLAM9\loadMRCLAMdataSet.m')
+
+% numSteps
+% useGTOnly
+% useLandmarksOnly
+% useTrustFactor
+% trustFactorTime
+
 
 % Load data from MRCLAM 1
 run('data\MRCLAM1\loadMRCLAMdataSetPF.m')
@@ -46,13 +56,13 @@ MEAS_STATS = zeros(5,3);
 % Iterate through sampled data
 
 % Robot 1 Solo Start/End
-start = 600;
+start = 1;
 %start = 1;
 % Start time
 t = Robots{1}.G(start, 1);
 
 % End index and time
-end_idx = 1000;
+end_idx = numSteps;
 
 % Num robots
 num_robots = 5;
@@ -179,12 +189,12 @@ for i = start:end_idx
         command_t = [Robots{robot_num}.O(i,2); Robots{robot_num}.O(i,3)];
 
         % Find measurements that match time step
-        [z, measurementIndex(robot_num)] = getObservations(Robots, robot_num, t, measurementIndex(robot_num), codeDict);
+        [z, measurementIndex(robot_num)] = getObservations(Robots, robot_num, t, measurementIndex(robot_num), codeDict, useLandmarksOnly);
 
         % If we have measurement, update with that. Otherwise use odo
         filters(robot_num).motion_update(command_t, t);
         if z(1,1) ~= -1
-            filters(robot_num).measurement_update(robot_num, z);
+            filters(robot_num).measurement_update(robot_num, z, useTrustFactor, trustFactorTime);
         end
 
         wtot = sum(filters(robot_num).p.w);
@@ -203,7 +213,7 @@ for i = start:end_idx
             poseMean(3) = wrapToPi(poseMean(3));
             Robots{robot_num}.Est(i,:) = [t poseMean(1) poseMean(2) ...
                 poseMean(3)];
-            if(use_robot_gt)
+            if(useGTOnly)
                 ROBOT_ESTIMATES(robot_num,1:3) = Robots{robot_num}.G(i,2:4);
             else
                 ROBOT_ESTIMATES(robot_num,1:3) = [poseMean(1) poseMean(2) ...
@@ -225,18 +235,35 @@ end
 %animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
 
 %% Plot error
-hold on
+results_1_PF = zeros(8, numSteps);
+results_2_PF = zeros(8, numSteps);
+results_3_PF = zeros(8, numSteps);
+results_4_PF = zeros(8, numSteps);
+results_5_PF = zeros(8, numSteps);
+
+% hold on
 for i = 1:5
-    plot(square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4)));
-    ylim([0, 5]);
+    if i == 1
+        results_1_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+    elseif i == 2
+        results_2_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+    elseif i == 3
+        results_3_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+    elseif i == 4
+        results_4_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+    elseif i == 5
+        results_5_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+    end
+%         plot(square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4)));
+%     ylim([0, 5]);
 end
-hold off
+% hold off
 
 % Ask other robot location, their estimated accuracy rating (no. landmarks
 % in their view)
 % % Some chance of failure (packet loss)
 % % 
-function [z, idx] = getObservations(Robots, robot_num, t, idx, codeDict)
+function [z, idx] = getObservations(Robots, robot_num, t, idx, codeDict, useLandmarksOnly)
     global MEAS_STATS;
 
     % Built vector of landmarks observed at current timestep
@@ -253,7 +280,7 @@ function [z, idx] = getObservations(Robots, robot_num, t, idx, codeDict)
         else
             disp("Error: Key not found")
         end
-        if(lm_only)
+        if(useLandmarksOnly)
             if(landmarkID > 5)
                 MEAS_STATS(robot_num,1) = MEAS_STATS(robot_num,1) + 1;
                 range = Robots{robot_num}.M(idx, 3);
@@ -295,8 +322,7 @@ function [err] = square_err(groundtruth, estimate)
     err = zeros(len,1);
     for i = 1:len
         err(i) = sqrt((groundtruth(i,1) - estimate(i,1))^2 + ...
-        (groundtruth(i,2) - estimate(i,2))^2); %+ ...
-        %wrapToPi((groundtruth(i,3) - estimate(i,3)))^2);
+        (groundtruth(i,2) - estimate(i,2))^2); 
     end
 end
   
