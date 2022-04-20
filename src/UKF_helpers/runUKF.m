@@ -42,33 +42,38 @@ results2UKF = [];
 results3UKF = [];
 results4UKF = [];
 results5UKF = [];
+useGTOnly = false;
+useLandmarkOnly = false;
 
 global ROBOT1 ROBOT2 ROBOT3 ROBOT4 ROBOT5 LANDMARK BAR
-% ROBOT1 = Robot1_Groundtruth;
-% ROBOT2 = Robot2_Groundtruth;
-% ROBOT3 = Robot3_Groundtruth;
-% ROBOT4 = Robot4_Groundtruth;
-% ROBOT5 = Robot5_Groundtruth;
-ROBOT1 = filter1;
-ROBOT2 = filter2;
-ROBOT3 = filter3;
-ROBOT4 = filter4;
-ROBOT5 = filter5;
+if useGTOnly == true
+    ROBOT1 = Robot1_Groundtruth;
+    ROBOT2 = Robot2_Groundtruth;
+    ROBOT3 = Robot3_Groundtruth;
+    ROBOT4 = Robot4_Groundtruth;
+    ROBOT5 = Robot5_Groundtruth;
+else
+    ROBOT1 = filter1;
+    ROBOT2 = filter2;
+    ROBOT3 = filter3;
+    ROBOT4 = filter4;
+    ROBOT5 = filter5;
+end
 BAR = Barcodes;
 LANDMARK = Landmark_Groundtruth;
 
-nsteps = 30000;
-for t = 1:nsteps
+numSteps = 30000;
+for t = 1:numSteps
     % Robot1 Prediction & Correction
     motionCommand1 = Robot1_Odometry(t, 2:3);
     filter1.prediction(motionCommand1);
     idx1 = find(abs(Robot1_Measurement(:, 1)-Robot1_Odometry(t, 1))<0.0001);
-    if isempty(idx1)
+    if length(idx1)<1
         filter1.mu = filter1.mu_pred;
         filter1.Sigma = filter1.Sigma_pred;
     else
         observation1 = Robot1_Measurement(idx1, :);
-        filter1.correction(observation1);
+        filter1.correction(observation1, useGTOnly, useLandmarkOnly);
     end
     Robot1_Correction(t,:) = filter1.mu;
     results1UKF(:, t) = mahalanobis(filter1.mu, filter1.Sigma, Robot1_Groundtruth(t, 2:4)');
@@ -77,12 +82,12 @@ for t = 1:nsteps
     motionCommand2 = Robot2_Odometry(t, 2:3);
     filter2.prediction(motionCommand2);
     idx2 = find(abs(Robot2_Measurement(:, 1)-Robot2_Odometry(t, 1))<0.0001);
-    if isempty(idx2)
+    if length(idx2)<1
         filter2.mu = filter2.mu_pred;
         filter2.Sigma = filter2.Sigma_pred;
     else
         observation2 = Robot2_Measurement(idx2, :);
-        filter2.correction(observation2);
+        filter2.correction(observation2, useGTOnly, useLandmarkOnly);
     end
     Robot2_Correction(t,:) = filter2.mu;
     results2UKF(:, t) = mahalanobis(filter2.mu, filter2.Sigma, Robot2_Groundtruth(t, 2:4)');
@@ -91,12 +96,12 @@ for t = 1:nsteps
     motionCommand3 = Robot3_Odometry(t, 2:3);
     filter3.prediction(motionCommand3);
     idx3 = find(abs(Robot3_Measurement(:, 1)-Robot3_Odometry(t, 1))<0.0001);
-    if isempty(idx3)
+    if length(idx3)<1
         filter3.mu = filter3.mu_pred;
         filter3.Sigma = filter3.Sigma_pred;
     else
         observation3 = Robot3_Measurement(idx3, :);
-        filter3.correction(observation3);
+        filter3.correction(observation3, useGTOnly, useLandmarkOnly);
     end
     Robot3_Correction(t,:) = filter3.mu;
     results3UKF(:, t) = mahalanobis(filter3.mu, filter3.Sigma, Robot3_Groundtruth(t, 2:4)');
@@ -105,12 +110,12 @@ for t = 1:nsteps
     motionCommand4 = Robot4_Odometry(t, 2:3);
     filter4.prediction(motionCommand4);
     idx4 = find(abs(Robot4_Measurement(:, 1)-Robot4_Odometry(t, 1))<0.0001);
-    if isempty(idx4)
+    if length(idx4)<1
         filter4.mu = filter4.mu_pred;
         filter4.Sigma = filter4.Sigma_pred;
     else
         observation4 = Robot4_Measurement(idx4, :);
-        filter4.correction(observation4);
+        filter4.correction(observation4, useGTOnly, useLandmarkOnly);
     end
     Robot4_Correction(t,:) = filter4.mu;
     results4UKF(:, t) = mahalanobis(filter4.mu, filter4.Sigma, Robot4_Groundtruth(t, 2:4)');
@@ -119,42 +124,42 @@ for t = 1:nsteps
     motionCommand5 = Robot5_Odometry(t, 2:3);
     filter5.prediction(motionCommand5);
     idx5 = find(abs(Robot5_Measurement(:, 1)-Robot5_Odometry(t, 1))<0.0001);
-    if isempty(idx5)
+    if length(idx5)<1
         filter5.mu = filter5.mu_pred;
         filter5.Sigma = filter5.Sigma_pred;
     else
         observation5 = Robot5_Measurement(idx5, :);
-        filter5.correction(observation5);
+        filter5.correction(observation5, useGTOnly, useLandmarkOnly);
     end
     Robot5_Correction(t,:) = filter5.mu;
     results5UKF(:, t) = mahalanobis(filter5.mu, filter5.Sigma, Robot5_Groundtruth(t, 2:4)');
 end
 
 
-% error1 = sqrt((Robot1_Correction(1:nsteps,1)-Robot1_Groundtruth(1:nsteps,2)).^2+(Robot1_Correction(1:nsteps,2)-Robot1_Groundtruth(1:nsteps,3)).^2);
-% error2 = sqrt((Robot2_Correction(1:nsteps,1)-Robot2_Groundtruth(1:nsteps,2)).^2+(Robot2_Correction(1:nsteps,2)-Robot2_Groundtruth(1:nsteps,3)).^2);
-% error3 = sqrt((Robot3_Correction(1:nsteps,1)-Robot3_Groundtruth(1:nsteps,2)).^2+(Robot3_Correction(1:nsteps,2)-Robot3_Groundtruth(1:nsteps,3)).^2);
-% error4 = sqrt((Robot4_Correction(1:nsteps,1)-Robot4_Groundtruth(1:nsteps,2)).^2+(Robot4_Correction(1:nsteps,2)-Robot4_Groundtruth(1:nsteps,3)).^2);
-% error5 = sqrt((Robot5_Correction(1:nsteps,1)-Robot5_Groundtruth(1:nsteps,2)).^2+(Robot5_Correction(1:nsteps,2)-Robot5_Groundtruth(1:nsteps,3)).^2);
-% distance_MSE = [mean(error1); mean(error2); mean(error3); mean(error4); mean(error5)];
-% 
-% angle_error1 = abs(wrapToPi(Robot1_Correction(1:nsteps,3)-Robot1_Groundtruth(1:nsteps,4)));
-% angle_error2 = abs(wrapToPi(Robot2_Correction(1:nsteps,3)-Robot2_Groundtruth(1:nsteps,4)));
-% angle_error3 = abs(wrapToPi(Robot3_Correction(1:nsteps,3)-Robot3_Groundtruth(1:nsteps,4)));
-% angle_error4 = abs(wrapToPi(Robot4_Correction(1:nsteps,3)-Robot4_Groundtruth(1:nsteps,4)));
-% angle_error5 = abs(wrapToPi(Robot5_Correction(1:nsteps,3)-Robot5_Groundtruth(1:nsteps,4)));
-% angle_MSE = [mean(angle_error1); mean(angle_error2); mean(angle_error3); mean(angle_error4); mean(angle_error5)];
+error1 = sqrt((Robot1_Correction(1:numSteps,1)-Robot1_Groundtruth(1:numSteps,2)).^2+(Robot1_Correction(1:numSteps,2)-Robot1_Groundtruth(1:numSteps,3)).^2);
+error2 = sqrt((Robot2_Correction(1:numSteps,1)-Robot2_Groundtruth(1:numSteps,2)).^2+(Robot2_Correction(1:numSteps,2)-Robot2_Groundtruth(1:numSteps,3)).^2);
+error3 = sqrt((Robot3_Correction(1:numSteps,1)-Robot3_Groundtruth(1:numSteps,2)).^2+(Robot3_Correction(1:numSteps,2)-Robot3_Groundtruth(1:numSteps,3)).^2);
+error4 = sqrt((Robot4_Correction(1:numSteps,1)-Robot4_Groundtruth(1:numSteps,2)).^2+(Robot4_Correction(1:numSteps,2)-Robot4_Groundtruth(1:numSteps,3)).^2);
+error5 = sqrt((Robot5_Correction(1:numSteps,1)-Robot5_Groundtruth(1:numSteps,2)).^2+(Robot5_Correction(1:numSteps,2)-Robot5_Groundtruth(1:numSteps,3)).^2);
+distance_MSE = [mean(error1); mean(error2); mean(error3); mean(error4); mean(error5)];
 
-% figure(1);
-% plot(0:0.02:(nsteps-1)*0.02, error1, 0:0.02:(nsteps-1)*0.02, error2, 0:0.02:(nsteps-1)*0.02, error3, 0:0.02:(nsteps-1)*0.02, error4, 0:0.02:(nsteps-1)*0.02, error5, 'LineWidth',1.5);
-% xlabel('Time(s)');
-% ylabel('Distance(m)');
-% legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
-% title('Distance Error(UKF)');
-% 
-% figure(2);
-% plot(0:0.02:(nsteps-1)*0.02, angle_error1, 0:0.02:(nsteps-1)*0.02, angle_error2, 0:0.02:(nsteps-1)*0.02, angle_error3, 0:0.02:(nsteps-1)*0.02, angle_error4, 0:0.02:(nsteps-1)*0.02, angle_error5, 'LineWidth',1.5);
-% xlabel('Time(s)');
-% ylabel('Angle(rad)');
-% legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
-% title('Angle Error(UKF)');
+angle_error1 = abs(wrapToPi(Robot1_Correction(1:numSteps,3)-Robot1_Groundtruth(1:numSteps,4)));
+angle_error2 = abs(wrapToPi(Robot2_Correction(1:numSteps,3)-Robot2_Groundtruth(1:numSteps,4)));
+angle_error3 = abs(wrapToPi(Robot3_Correction(1:numSteps,3)-Robot3_Groundtruth(1:numSteps,4)));
+angle_error4 = abs(wrapToPi(Robot4_Correction(1:numSteps,3)-Robot4_Groundtruth(1:numSteps,4)));
+angle_error5 = abs(wrapToPi(Robot5_Correction(1:numSteps,3)-Robot5_Groundtruth(1:numSteps,4)));
+angle_MSE = [mean(angle_error1); mean(angle_error2); mean(angle_error3); mean(angle_error4); mean(angle_error5)];
+
+figure(1);
+plot(0:0.02:(numSteps-1)*0.02, error1, 0:0.02:(numSteps-1)*0.02, error2, 0:0.02:(numSteps-1)*0.02, error3, 0:0.02:(numSteps-1)*0.02, error4, 0:0.02:(numSteps-1)*0.02, error5, 'LineWidth',1.5);
+xlabel('Time(s)');
+ylabel('Distance(m)');
+legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
+title('Distance Error(UKF)');
+
+figure(2);
+plot(0:0.02:(numSteps-1)*0.02, angle_error1, 0:0.02:(numSteps-1)*0.02, angle_error2, 0:0.02:(numSteps-1)*0.02, angle_error3, 0:0.02:(numSteps-1)*0.02, angle_error4, 0:0.02:(numSteps-1)*0.02, angle_error5, 'LineWidth',1.5);
+xlabel('Time(s)');
+ylabel('Angle(rad)');
+legend('Robot1', 'Robot2', 'Robot3', 'Robot4', 'Robot5');
+title('Angle Error(UKF)');
