@@ -4,7 +4,13 @@
 % Note - right click on mainPF.m to change directory to that in order to
 % work properly
 % 
-% clc;clear; close all;
+
+clc;
+close all;
+clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
+
+
+disp("Running PF");
 
 srcFolderPath = pwd;
 addpath PF_helpers
@@ -176,10 +182,18 @@ robot_num = 5;
 % track each robot's start index, since they are desync
 measurementIndex = [1 1 1 1 1];
 
+waitbar_h = waitbar(0,'Waitbar PF');
+lastPerc = 0;
 for i = start:end_idx
     if(mod(i,1000) == 0)
         disp("On iteration: ")
         disp(i)
+    end
+    
+    perc = i/numSteps;
+    if (abs(perc-lastPerc)>.01)
+        lastPerc = perc;
+        waitbar(perc,waitbar_h,sprintf('%f%% along...',perc*100))
     end
     
     % Iterate through robots
@@ -230,29 +244,29 @@ for i = start:end_idx
     % Increment timestep
     t = t + 0.02;
 end
-
+close(waitbar_h);
 %% Animate results
 %animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
 
 %% Plot error
-results_1_PF = zeros(8, numSteps);
-results_2_PF = zeros(8, numSteps);
-results_3_PF = zeros(8, numSteps);
-results_4_PF = zeros(8, numSteps);
-results_5_PF = zeros(8, numSteps);
+results_1PF = zeros(8, numSteps);
+results_2PF = zeros(8, numSteps);
+results_3PF = zeros(8, numSteps);
+results_4PF = zeros(8, numSteps);
+results_5PF = zeros(8, numSteps);
 
 % hold on
 for i = 1:5
     if i == 1
-        results_1_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results_1PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 2
-        results_2_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results_2PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 3
-        results_3_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results_3PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 4
-        results_4_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results_4PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 5
-        results_5_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
+        results_5PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     end
 %         plot(square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4)));
 %     ylim([0, 5]);

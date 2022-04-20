@@ -2,9 +2,9 @@
 % Author:  Cameron Kabacinski <camkab@umich.ed>
 % Purpose: Open data and explore format for 530 project
 
-clc;
-close all;
-clearvars;
+% clc;
+% close all;
+% clearvars;
 
 srcFolderPath = pwd;
 addpath lib
@@ -14,13 +14,13 @@ topLevelPath = pwd;
 cd("collectedData");
 collectedDataPath = pwd;
 
-runDataFolders = ["MRCLAM1" "MRCLAM9"];
+% runDataFolders = ["MRCLAM1" "MRCLAM9"];
 runDataFolders = ["MRCLAM1"];
 saveOutput = false;
 
 for currDataIndex=1:length(runDataFolders)
     cd(topLevelPath)
-    clearvars -except currDataIndex srcFolderPath topLevelPath collectedDataPath runDataFolders
+    clearvars -except currDataIndex srcFolderPath topLevelPath collectedDataPath runDataFolders numSteps
     close all
     %Load and sample data
     cmd = strcat('run(''data\', runDataFolders(currDataIndex), '\loadMRCLAMdataSet.m'');');
