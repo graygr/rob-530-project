@@ -57,26 +57,26 @@ if filterName == "ALL"
     filtersToPlot = ["EKF" "PF" "UKF"];
 end
 for filterIndex=1:length(filtersToPlot)
-    filterName = filtersToPlot(filterIndex);
+    filterNameCurr = filtersToPlot(filterIndex);
     figure();
     hold on;
     for i=1:5
-        cmd = strcat('results = results', num2str(i), filterName,';');
+        cmd = strcat('results = results', num2str(i), filterNameCurr,';');
         eval(cmd);
         plot(1:numSteps,results(8,1:numSteps));   
         distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
         stdDeviation = std(results(8,1:numSteps));
-        astring = strcat(filterName,': Robot: ',num2str(i),' distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
+        astring = strcat(filterNameCurr,': Robot: ',num2str(i),' distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
         disp(astring);
     end
 
     if useLandmarksOnly == true
-        title([filterName 'Landmarks Only']);
+        title([filterNameCurr 'Landmarks Only']);
     elseif useGTOnly == true
-        title([filterName 'Use Robot GT Measurement']);
+        title([filterNameCurr 'Use Robot GT Measurement']);
     elseif useTrustFactor == true
         astring = strcat('Use Robot Est w/ ',num2str(trustFactorTime),' sec trust barrier');
-        title([filterName astring]);
+        title([filterNameCurr astring]);
     end
 
     ylim([0 9]);
