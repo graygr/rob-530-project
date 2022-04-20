@@ -79,7 +79,7 @@ for filterIndex=1:length(filtersToPlot)
         title([filterName astring]);
     end
 
-    ylim([0 9]);
+    %ylim([0 9]);
     xlabel("Timestep");
     ylabel("Distance Error");
     legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
