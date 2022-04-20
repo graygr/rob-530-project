@@ -10,19 +10,8 @@ timeTrustNumSteps = 1000;
 
 %Assume for now that all robots will use same alphas and beta
 % Motion noise (in odometry space, see Table 5.5, p.134 in book).
-% alphas = [  0.25 0.05 ...
-%             0.25 0.5 ...
-%             0.25 0.05].^2; % variance of noise proportional to alphas
-% alphas = [  0.00025 0.00005 ...
-%             0.0025 0.05 ...
-%             0.0025 0.0005].^2; % variance of noise proportional to alphas
-% Standard deviation of Gaussian sensor noise (independent of distance)
-% beta(1) = deg2rad(10);
-% beta(2) = 100;
 
-%note that delta T will become part of the g function and its jacobians
-%in our HW5 we treated delta t as 1. so we should try using it as not 1
-deltaT = 0.02; %it probably will be 0.02 based on 50Hz odometry commands
+deltaT = 0.02; 
 
 systems = {};
 filters = {};
@@ -41,7 +30,8 @@ for i=1:length(robotsToRun)
     eval(['robotSigmas' num2str(id) ' = {};'])
     eval(['lastvalidMeasurementIndex' num2str(id) ' = 1;'])
 %     eval(['rejectedUpdates' num2str(id) ' = 0;'])
-    eval(['countBadObservationIDMismatch' num2str(id) ' = 0;'])    
+    eval(['countBadObservationIDMismatch' num2str(id) ' = 0;'])  
+    eval(['fixedBadObservationIDMismatch' num2str(id) ' = 0;'])    
     eval(['numLandmarksObsUsed' num2str(id) ' = 0;'])   
     eval(['numRobotObsUsed' num2str(id) ' = 0;'])   
     eval(['numUpdatesUsed' num2str(id) ' = 0;'])    
@@ -65,6 +55,7 @@ landmarkIDToXMAP = containers.Map(keySet2,xValueSet);
 landmarkIDToYMAP = containers.Map(keySet2,yValueSet);
 
 landmarkDistanceThresholdSquared = landmarkDistanceThreshold^2;
+likelyLandmarkDistanceThresholdSquared = likelyLandmarkDistanceThreshold^2; 
 
 observationsDiff = [];
 observationsDiffIndex = 1;
@@ -188,7 +179,39 @@ for t = 1:numSteps
 %                         disp("Warning, observed landmark id position does not agree with range/bearing measurement");
                         eval(['countBadObservationIDMismatch' num2str(id) ...
                             ' = countBadObservationIDMismatch' num2str(id) ' + 1;'])
-                        continue;
+                        % see if there are any other likely landmarks, 
+                        foundLikely = false;
+                        bestLikelyDistance = Inf;
+                        bestLikelyLandmarkId = 0;
+                        bestLikelyLandmarkX = 0;
+                        bestLikelyLandmarkY = 0;
+                        for findLikelyLandmark=1:n_landmarks
+                            currLandmarkId = Landmark_Groundtruth(findLikelyLandmark,1);
+                            currLandmarkX = Landmark_Groundtruth(findLikelyLandmark,2);
+                            currLandmarkY = Landmark_Groundtruth(findLikelyLandmark,3);
+                            
+                            currDistanceSquared = (currLandmarkX-x1)^2+(currLandmarkY-y1)^2;
+                            if currDistanceSquared < bestLikelyDistance && currDistanceSquared < likelyLandmarkDistanceThresholdSquared
+                                foundLikely = true;
+                                bestLikelyDistance = currDistanceSquared;
+                                bestLikelyLandmarkId = currLandmarkId;
+                                bestLikelyLandmarkX = currLandmarkX;
+                                bestLikelyLandmarkY = currLandmarkY;
+                            end
+                        end
+                        
+                        if foundLikely == true
+%                             disp(['Found likely landmark to be ' num2str(bestLikelyLandmarkId) 'instead of ' num2str(idObserved)]);
+                            landmarkX = bestLikelyLandmarkX;
+                            landmarkY = bestLikelyLandmarkY;
+                            idObserved = bestLikelyLandmarkId;
+                            likelyLandmarbarcodeId = Barcodes(find(Barcodes(:,1)==bestLikelyLandmarkId),2);
+                            measurements(j,1) = likelyLandmarbarcodeId;
+                            eval(['fixedBadObservationIDMismatch' num2str(id) ...
+                                ' = fixedBadObservationIDMismatch' num2str(id) ' + 1;'])
+                        else
+                            continue;
+                        end
                     end
                     
                     observations(1, obsCol) = measuredBearing; %get bearing from measurment
@@ -287,6 +310,8 @@ for i=1:length(robotsToRun)
     eval(['robotVCommands = Robot' num2str(id) '_Odometry(1:numSteps,2);'])
     eval(['robotWCommands = Robot' num2str(id) '_Odometry(1:numSteps,3);'])
     eval(['countBadObservationIDMismatch = countBadObservationIDMismatch' num2str(id) ';'])
+    eval(['fixedBadObservationIDMismatch = fixedBadObservationIDMismatch' num2str(id) ';'])
+    
     
     for j=1:length(robotSigmas)
         sigmaDiags(:,j) = diag(robotSigmas{j});
@@ -326,6 +351,7 @@ for i=1:length(robotsToRun)
 %     disp([num2str(numRejected) ' rejected updates.']);
     if countBadObservationIDMismatch ~= 0
         disp([num2str(countBadObservationIDMismatch) ' bad landmark id observations.']);
+        disp([num2str(fixedBadObservationIDMismatch) ' fixed landmark id observations.']);
     end
     
     rows = 2;
@@ -477,9 +503,15 @@ for i=1:length(robotsToRun)
     eval(['numRobotObsUsed' num2str(id) ' '])   
     eval(['numUpdatesUsed' num2str(id) ' '])    
 end
-% title("EKF - Use Robot Est w/ 20 sec trust barrier");
-% title("EKF - Landmark Only");
-title("EKF - Use Robot GT Measurement");
+
+if useLandmarksOnly == true
+    title("EKF - Landmark Only");
+elseif useGTForObservedRobots == true
+    title("EKF - Use Robot GT Measurement");
+elseif useEstimateForObservedRobots == true
+    title("EKF - Use Robot Est w/ 20 sec trust barrier");
+end
+    
 ylim([0 9]);
 xlabel("Timestep");
 ylabel("Distance Error");
