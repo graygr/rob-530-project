@@ -8,6 +8,9 @@ In this project, we created several different filters to perform cooperative loc
 In order to model a trust system for the robots, we measured the number of update ticks since the last fully observable state for each robot, and only updated the corresponding state when we determined that a robot was well versed enough in its own location to localize off of and correct the odometry drift. This resulted in large improvements for the Particle Filter, but the UKF still performed the best through the trial. 
 
 Future work to explore
+- Trust gradient
+- Nonlinear trust propogation through relative observations
+- Landmark removal and forced relative observations
 
 Link to Presentation: [Link](https://www.youtube.com/watch?v=r0BZHNcIqdw)
 
@@ -20,8 +23,10 @@ We used Matlab R2021a
 We used the [UTIAS Multi-Robot Cooperative Localization and Mapping] Dataset(http://asrl.utias.utoronto.ca/datasets/mrclam/index.html), specifically the first dataset for developement and testing purposes.
   
 # Usage
-To switch between the filter, switch to the corresponding branch. EKF is on master, PF and UKF are on their corresponding branches.
-
-From there, run the main.m file in each branch in order to execute the filter. 
-
-TODO: Combine all the branches and make it nice and easy to call different filters.
+In order to use our system, run the "main.m" file with the parameters you wish to run and test. 
+- numSteps controls how many timesteps the filter will run for. 
+- filterName controls which filter algorithm will be used
+- trustFactorTime is the binary time cutoff for the trust factor in seconds
+- useGTOnly allows the filters to use robot ground truth for relative measurements instead of estimated positions
+- useLandmarkOnly ignores all relative measurements, forcing the filters to only use landmarks
+- useTrustFactor enables the trust factor measurement filtering system
