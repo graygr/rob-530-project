@@ -1,4 +1,4 @@
-function sys = system_initialization(alphas, betaStatic, betaDynamic, deltaT)
+function sys = system_initializationEKF(alphas, betaStatic, betaDynamic, deltaT)
 sys.gfun = @(mu, u) [...
     mu(1) + (-u(1) / u(2) * sin(mu(3)) + u(1) / u(2) * sin(mu(3) + u(2)*deltaT));
     mu(2) + ( u(1) / u(2) * cos(mu(3)) - u(1) / u(2) * cos(mu(3) + u(2)*deltaT));

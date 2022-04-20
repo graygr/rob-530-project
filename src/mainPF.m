@@ -1,4 +1,4 @@
-% File: main.m
+% File: mainPF.m
 % Author: Gregor Limstrom <limstrom@umich.edu>
 % Purpose: Open data and explore format for 530 project
 clc;clear; close all;

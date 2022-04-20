@@ -21,7 +21,7 @@ for i=1:length(robotsToRun)
     %name and tack on their id
     eval(['initialStateMean' num2str(id) ' = Robot' num2str(id) '_Groundtruth(1,2:end)'';'])
     eval(['initialStateCov' num2str(id) ' = eye(3);'])
-    sys = system_initialization(alphas,  beta,  [0 0 0 0], deltaT);
+    sys = system_initializationEKF(alphas,  beta,  [0 0 0 0], deltaT);
     systems{i} = sys;
     eval(['filters{i}=filter_initialization(sys,  initialStateMean' num2str(id) ',  initialStateCov' num2str(id) ', "EKF", deltaT);'])
     

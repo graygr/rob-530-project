@@ -17,7 +17,6 @@ collectedDataPath = pwd;
 runDataFolders = ["MRCLAM1" "MRCLAM9"];
 runDataFolders = ["MRCLAM1"];
 saveOutput = false;
-currDataIndex=1;
 
 for currDataIndex=1:length(runDataFolders)
     cd(topLevelPath)
@@ -27,8 +26,8 @@ for currDataIndex=1:length(runDataFolders)
     cmd = strcat('run(''data\', runDataFolders(currDataIndex), '\loadMRCLAMdataSet.m'');');
     eval(cmd);
     cd(srcFolderPath)
-    run('sampleMRCLAMdataSetEKF.m')
-    % run('animateMRCLAMdataSetEKF.m') % Animate data
+    run('sampleMRCLAMdataSet.m')
+    % run('animateMRCLAMdataSet.m') % Animate data
     
     % EKF filter for localization
     robotsToRun = [1 2 3 4 5];
@@ -101,44 +100,5 @@ for currDataIndex=1:length(runDataFolders)
     end
     
 end
-
-
-
-
-
-
-%%
-
-%%
-      
-% run('runEKF.m');
-% save("CLAM1_correctionsUsingGt.mat");
-% useObservationsToCorrect = false;
-% run('runEKF.m');
-% save("CLAM1_predictionOnly.mat");
-% 
-% 
-% % now run the other dataset
-% close all;
-% clearvars -except mainFilePath topLevel alphas beta landmarkDistanceThreshold plotObservationLines ...
-%     robotsToRun useGTForObservedRobots plotStatistics
-% 
-% cd(topLevel);
-% run('data\MRCLAM9\loadMRCLAMdataSet.m')
-% run('Tools\sampleMRCLAMdataSet.m')
-% cd(mainFilePath)
-% 
-% numSteps = length(Robot1_Groundtruth); %number of steps from dataset to run
-% 
-% useObservationsToCorrect = true;
-% 
-% run('runEKF.m');
-% save("CLAM1_correctionsUsingGt.mat");
-% useObservationsToCorrect = false;
-% run('runEKF.m');
-% save("CLAM1_predictionOnly.mat");
-% 
-
- 
 
  
