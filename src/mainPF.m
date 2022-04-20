@@ -55,7 +55,7 @@ MEAS_STATS = zeros(5,3);
 % Iterate through sampled data
 
 % Robot 1 Solo Start/End
-start = 600;
+start = 1;
 %start = 1;
 % Start time
 t = Robots{1}.G(start, 1);
@@ -262,7 +262,7 @@ hold off
 % in their view)
 % % Some chance of failure (packet loss)
 % % 
-function [z, idx] = getObservations(Robots, robot_num, t, idx, codeDict)
+function [z, idx] = getObservations(Robots, robot_num, t, idx, codeDict, useLandmarksOnly)
     global MEAS_STATS;
 
     % Built vector of landmarks observed at current timestep
