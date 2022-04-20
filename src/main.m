@@ -79,13 +79,13 @@ for filterIndex=1:length(filtersToPlot)
     xlabel("Timestep");
     ylabel("Distance Error");
     legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
-
+    
+    distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
+    stdDeviation = std(results(8,1:numSteps));
+    astring = strcat(filterName,': distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
+    disp(astring);
 end
 
 
-% eval(['results = results' num2str(id) 'EKF;'])
-% distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
-% stdDeviation = std(results(8,1:numSteps));
-% disp(['distance RMSE [' num2str(distanceRMSE) '] std deviation [' num2str(stdDeviation) '].']);
 
 
