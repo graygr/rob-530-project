@@ -93,7 +93,7 @@ classdef particle_filter < handle
             end
         end
         
-        function measurement_update(obj, robot_num, z)
+        function measurement_update(obj, robot_num, z, useTrustFactor, trustFactorTime)
             % z format - list of observations [range ; bearing ; id]
             % num observations - length of first row
             num_observations = size(z(1,:),2);
@@ -171,8 +171,8 @@ classdef particle_filter < handle
                     end
                 else
                     % If robot, pull from current estimate
-                    % If more than 10 sec since last, don't trust
-                    if(ROBOT_ESTIMATES(z(3,j),4) > 500)
+                    % If more than 20 sec since last, don't trust
+                    if(useTrustFactor && ROBOT_ESTIMATES(z(3,j),4) > trustFactorTime * 50)
                         % Skip update
                         return;
                     else

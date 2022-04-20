@@ -16,6 +16,13 @@ cd(topLevelPath)
 %% Load data from MRCLAM9
 %run('data\MRCLAM9\loadMRCLAMdataSet.m')
 
+% numSteps
+% useGTOnly
+% useLandmarksOnly
+% useTrustFactor
+% trustFactorTime
+
+
 % Load data from MRCLAM 1
 run('data\MRCLAM1\loadMRCLAMdataSetPF.m')
 
@@ -54,7 +61,7 @@ start = 600;
 t = Robots{1}.G(start, 1);
 
 % End index and time
-end_idx = 30000;
+end_idx = numSteps;
 
 % Num robots
 num_robots = 5;
@@ -181,12 +188,12 @@ for i = start:end_idx
         command_t = [Robots{robot_num}.O(i,2); Robots{robot_num}.O(i,3)];
 
         % Find measurements that match time step
-        [z, measurementIndex(robot_num)] = getObservations(Robots, robot_num, t, measurementIndex(robot_num), codeDict);
+        [z, measurementIndex(robot_num)] = getObservations(Robots, robot_num, t, measurementIndex(robot_num), codeDict, useLandmarksOnly);
 
         % If we have measurement, update with that. Otherwise use odo
         filters(robot_num).motion_update(command_t, t);
         if z(1,1) ~= -1
-            filters(robot_num).measurement_update(robot_num, z);
+            filters(robot_num).measurement_update(robot_num, z, useTrustFactor, trustFactorTime);
         end
 
         wtot = sum(filters(robot_num).p.w);
@@ -205,7 +212,7 @@ for i = start:end_idx
             poseMean(3) = wrapToPi(poseMean(3));
             Robots{robot_num}.Est(i,:) = [t poseMean(1) poseMean(2) ...
                 poseMean(3)];
-            if(use_robot_gt)
+            if(useGTOnly)
                 ROBOT_ESTIMATES(robot_num,1:3) = Robots{robot_num}.G(i,2:4);
             else
                 ROBOT_ESTIMATES(robot_num,1:3) = [poseMean(1) poseMean(2) ...
@@ -272,7 +279,7 @@ function [z, idx] = getObservations(Robots, robot_num, t, idx, codeDict)
         else
             disp("Error: Key not found")
         end
-        if(lm_only)
+        if(useLandmarksOnly)
             if(landmarkID > 5)
                 MEAS_STATS(robot_num,1) = MEAS_STATS(robot_num,1) + 1;
                 range = Robots{robot_num}.M(idx, 3);
