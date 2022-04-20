@@ -1,4 +1,4 @@
-function sys = system_initialization(alphas, beta, gamma, dt)
+function sys = system_initialization_UKF(alphas, beta, gamma, dt)
 sys.gfun = @(mu, u) [...
     mu(1) + u(1)*dt*cos(mu(3)+u(2)*dt);
     mu(2) + u(1)*dt*sin(mu(3)+u(2)*dt);

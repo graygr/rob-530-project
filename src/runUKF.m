@@ -2,7 +2,7 @@
 alphas = [0.00025 0.00005 0.0025 0.0005 0.0025 0.0005].^2;
 beta = 0.02;
 gamma = 0.03;
-sys = system_initialization(alphas, beta, gamma, sample_time);
+sys = system_initialization_UKF(alphas, beta, gamma, sample_time);
 
 %Robots' State Initialization
 initialStateMean1 = [3.5732, -3.3328, 2.3408]';
