@@ -2,12 +2,13 @@
 % Author: Huashu Li <lihs@umich.edu>
 % Purpose: Open data and explore format for 530 project
 
-%% Import data from MRCLAM_1 - Defunct, they provide load and sample code
+close all;
+clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
 
-clc;clear; close all;
-
+disp("Running UKF");
 
 srcFolderPath = pwd;
+addpath(srcFolderPath)
 addpath UKF_helpers
 addpath lib
 cd("../");

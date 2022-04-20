@@ -2,13 +2,14 @@
 % Author:  Cameron Kabacinski <camkab@umich.ed>
 % Purpose: Open data and explore format for 530 project
 
-% clc;
-% close all;
-% clearvars;
+close all;
+clearvars -except currDataIndex srcFolderPath topLevelPath collectedDataPath runDataFolders numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
+
 
 srcFolderPath = pwd;
 addpath lib
 addpath EKF_helpers
+addpath(srcFolderPath)
 cd("../");
 topLevelPath = pwd;
 cd("collectedData");
@@ -20,7 +21,8 @@ saveOutput = false;
 
 for currDataIndex=1:length(runDataFolders)
     cd(topLevelPath)
-    clearvars -except currDataIndex srcFolderPath topLevelPath collectedDataPath runDataFolders numSteps
+    
+    clearvars -except currDataIndex srcFolderPath topLevelPath collectedDataPath runDataFolders numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
     close all
     %Load and sample data
     cmd = strcat('run(''data\', runDataFolders(currDataIndex), '\loadMRCLAMdataSet.m'');');
@@ -53,6 +55,7 @@ for currDataIndex=1:length(runDataFolders)
     useGTForObservedRobots = true;
     useEstimateForObservedRobots = ~useGTForObservedRobots;
     run('runEKF.m');
+    cd(srcFolderPath);
     break
     close all;
     if saveOutput == true
