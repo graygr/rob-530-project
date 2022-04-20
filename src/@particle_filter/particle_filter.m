@@ -3,8 +3,14 @@ classdef particle_filter < handle
     % The implementation follows the Sample Importance Resampling (SIR)
     % filter a.k.a bootstrap filter.
     %
+    %   Template
     %   Author: Maani Ghaffari Jadidi
     %   Date:   01/22/2019
+    
+    %   Modifications
+    %   Author: Gregor Limstrom
+    %   Date:   4/20/2022
+    %   Contact:limstrom@umich.edu
     
     properties
         f;              % process model
@@ -54,18 +60,14 @@ classdef particle_filter < handle
             % Control: [timestamp, u,v]
             % 
             
-%             dt = t - obj.last_timestep;
             dt = 0.02;
             
             % For each particle
             for i = 1:obj.n
                 % sample noise
-                % Noise is set to max(Odo) / 2
-                % Max trans is 0.02
-                % CHANGE: set noise relative to command 
-                %v = normrnd(control(1), 0.005); % trans
-                % Max rot is 0.57
-                %w = normrnd(control(2), 0.05); % rot
+                
+                % If there is no movement command, do not propogate the
+                % particles
                 if(control(1) == 0)
                     v_cmd = 0;
                 else
@@ -96,7 +98,6 @@ classdef particle_filter < handle
             % z format - list of observations [range ; bearing ; id]
             % num observations - length of first row
             num_observations = size(z(1,:),2);
-%             disp(num_observations);
             % If we only have 1 obs, then we can't accurately update w meas
             if(num_observations < 2)
 %                 disp("Not enough observations, skipping update");
@@ -121,7 +122,6 @@ classdef particle_filter < handle
                     % If more than 10 sec since last, don't trust
                     if(ROBOT_ESTIMATES(z(3,j),4) > 500)
                         % Skip update
-                        % TODO: Continue if we still have >1 updates
                         return;
                     else
                         lm(j,1) = ROBOT_ESTIMATES(z(3,j), 1);
@@ -145,7 +145,6 @@ classdef particle_filter < handle
                     y_t = obj.p.x(2,i);
                     theta_t = obj.p.x(3,i);
                 
-                    % TODO: Tried limiting observations, see what happens
                     if(z(1,j) < 0.1)
                         continue;
                     end
@@ -170,17 +169,11 @@ classdef particle_filter < handle
             obj.p.w = w;
             obj.p.w = obj.p.w ./ sum(obj.p.w);
 
-            % Importance Resampling
-%             disp(w)
-
             % If we lose localization, spread weights and cross fingers
-%             disp(w);
             if(sum(obj.p.w) == 0 || isnan(obj.p.w(1)))
                 obj.p.w = ones(obj.n,1);
                 obj.p.w = obj.p.w ./ sum(obj.p.w);
             end
-            
-%             disp(obj.p.w);
             
             s = RandStream('mlfg6331_64');
             new_idx = datasample(s, 1:obj.n, obj.n, 'Replace',true,'Weights',obj.p.w);
@@ -192,23 +185,9 @@ classdef particle_filter < handle
             % Set time since last update to 0
             ROBOT_ESTIMATES(robot_num, 4) = 0;
 
-            % compute effective number of particles
-%             obj.Neff = 1 / sum(obj.p.w.^2);
         end 
         
         function resampling(obj)
-%             % low variance resampling
-%             W = cumsum(obj.p.w);          
-%             r = rand / obj.n ;
-%             j = 1;
-%             for i = 1:obj.n
-%                 u = r + (i-1) / obj.n;
-%                 while u > W(j)
-%                     j = j + 1;
-%                 end
-%                 obj.p.x(:,i) = obj.p.x(:,j);
-%                 obj.p.w(i) = 1/obj.n;
-%             end
             % Importance Resampling
             % Caused estimate to drift wildly
             s = RandStream('mlfg6331_64');

@@ -57,34 +57,18 @@ end_idx = 30000;
 % Num robots
 num_robots = 5;
 
-% Robot 1-5 coop data
-% Robot 1 starts at 530, ends at 75000, t = 10.58
-% Robots 2-5 start at 500, end at 80000, t = 1250
-% start = 530;
-% 
-% end_idx = 130000;
-
-% % Measurement index
-% measurementIndex = 1;
-% % Align index of measurement with start timestep
-% while(Robots{1}.M(measurementIndex, 1) < t - 0.05)
-%     measurementIndex = measurementIndex + 1;
-% end
-
 % Map between barcodes and landmark id
 codeDict = containers.Map(Barcodes(:,2), Barcodes(:,1));
 
 % Move 
 
 % Set up system
-% TODO: Need to change size for multiple measurements? - maybe not
 R = diag([0.1^2, 0.05^2]);
 % Cholesky factor
 L = chol(R, 'lower');
-% Move measurements together to make iteration simpler
 
 % State
-%
+% create filter parameters for each robot
 %
 r1_sys = [];
 r1_sys.h = @(landmark_x, landmark_y, mu_pred) [...
@@ -168,6 +152,8 @@ init5.x = [Robots{5}.G(start,2);
             Robots{5}.G(start,4)];
 init5.Sigma = 0.1*eye(3);
 
+
+% Initialize individual particle filters
 filter_1 = particle_filter(r1_sys, init1);
 filter_2 = particle_filter(r2_sys, init2);
 filter_3 = particle_filter(r3_sys, init3);
@@ -176,21 +162,10 @@ filter_5 = particle_filter(r5_sys, init5);
 
 filters = [filter_1 filter_2 filter_3 filter_4 filter_5];
 
-% TODO: Add in robot 2-5 once 1 is working
 robot_num = 5;
 % track each robot's start index, since they are desync
 measurementIndex = [1 1 1 1 1];
 
-% Start index 
-% For MRCLAM1 - robot 1's odo is fucked until 10.5 seconds in
-% Fixed by starting later?
-% % start = 1;
-%animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
-
-
-
-% TODO: Stagger start? R1 starts sep from R2-5
-% size(Robots{1}.G, 1)
 for i = start:end_idx
     if(mod(i,1000) == 0)
         disp("On iteration: ")
@@ -199,14 +174,6 @@ for i = start:end_idx
     
     % Iterate through robots
     for robot_num = 1:num_robots
-        % Check if robot is active yet / still active
-%         if(Robots{robot_num}.G(i) - t > 0.05)
-%             continue;
-%         end
-        % Else, process and update robot
-        
-        % Robot index
-%        i = indexes(robot_num);
         
         % Update command vector
         command_t = [Robots{robot_num}.O(i,2); Robots{robot_num}.O(i,3)];
@@ -217,30 +184,15 @@ for i = start:end_idx
         % If we have measurement, update with that. Otherwise use odo
         filters(robot_num).motion_update(command_t, t);
         if z(1,1) ~= -1
-%             disp("Received measurement, calling update now")
             filters(robot_num).measurement_update(robot_num, z);
-%         else
-%             filters(robot_num).motion_update(command_t, t);
         end
 
-        % Check if we need to resample
-        % TODO: Disabled auto-resample
-%         if filters(robot_num).Neff < filters(robot_num).n/5
-%             %disp("Resampling filter now")
-%             filters(robot_num).resampling();
-%         end
-        % Importance resample every q steps
-        % TODO: tune q
-%         if(mod(i, 500) == 0)
-%             filters(robot_num).resampling();
-%         end
         wtot = sum(filters(robot_num).p.w);
         if wtot > 0
             
             use_robot_gt = false;
             
             % update state by sum and average particles
-    %         disp(wtot)
             poseMean = zeros(3,1);
             poseMean(1) = sum(filters(robot_num).p.x(1,:)' .* ...
                 filters(robot_num).p.w) / wtot;
@@ -262,7 +214,6 @@ for i = start:end_idx
             disp(wtot);
             disp(filter.p.w);
             Robots{robot_num}.Est(i,:) = [t nan(1,3)];
-            %error = square_err(Robots{robot_num}.G, Robots{robot_num}.Est);
         end    
         ROBOT_ESTIMATES(robot_num, 4) = ROBOT_ESTIMATES(robot_num, 4) + 1;
     end
