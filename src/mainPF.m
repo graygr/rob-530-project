@@ -235,27 +235,27 @@ end
 %animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
 
 %% Plot error
-results_1_PF = zeros(8, 30001-1000);
-results_2_PF = zeros(8, 30001-1000);
-results_3_PF = zeros(8, 30001-1000);
-results_4_PF = zeros(8, 30001-1000);
-results_5_PF = zeros(8, 30001-1000);
+results_1_PF = zeros(8, numSteps);
+results_2_PF = zeros(8, numSteps);
+results_3_PF = zeros(8, numSteps);
+results_4_PF = zeros(8, numSteps);
+results_5_PF = zeros(8, numSteps);
 
 hold on
 for i = 1:5
     if i == 1
-        results_1_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+        results_1_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 2
-        results_2_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+        results_2_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 3
-        results_3_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+        results_3_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 4
-        results_4_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+        results_4_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     elseif i == 5
-        results_5_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+        results_5_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
     end
-        plot(square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4)));
-    ylim([0, 5]);
+%         plot(square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4)));
+%     ylim([0, 5]);
 end
 hold off
 
