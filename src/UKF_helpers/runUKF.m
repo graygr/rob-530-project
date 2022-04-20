@@ -42,8 +42,8 @@ results2UKF = [];
 results3UKF = [];
 results4UKF = [];
 results5UKF = [];
-useGTOnly = false;
-useLandmarkOnly = false;
+% useGTOnly = false;
+% useLandmarkOnly = false;
 
 global ROBOT1 ROBOT2 ROBOT3 ROBOT4 ROBOT5 LANDMARK BAR
 if useGTOnly == true
