@@ -10,6 +10,7 @@
         mu_pred;
         Sigma_pred;
         trust;
+        time;
         n;              % Number of Sigma points
         X;              % Sigma points
         w;              % Weight of Sigma points
@@ -31,6 +32,7 @@
             obj.mu = init.mu;
             obj.Sigma = init.Sigma;
             obj.trust = true;
+            obj.time = 0;
         end
         
         %% Prediction function
@@ -45,9 +47,10 @@
         end
         
         %% Correction function
-        function correction(obj, z, useGTOnly, useLandmarkOnly)
+        function correction(obj, z, useGTOnly, useLandmarkOnly, useTrustFactor)
             global ROBOT1 ROBOT2 ROBOT3 ROBOT4 ROBOT5 LANDMARK BAR;
             bar = BAR;
+            success = false;
             for k = 1:size(z, 1)
                 if useGTOnly == true
                     step = find(abs(ROBOT1(:, 1)-z(k, 1))<0.0001);
@@ -87,6 +90,45 @@
                             continue
                         case 5
                             continue
+                        otherwise
+                            landmark = LANDMARK(idx-5, 2:3)+LANDMARK(idx-5, 4:5).*randn(1, 2);
+                    end
+                elseif useTrustFactor == true
+                    idx = find(bar(:, 2) == z(k, 2));
+                    if isempty(idx)
+                        continue
+                    end
+                    switch idx
+                        case 1
+                            if ROBOT1.trust == true
+                                landmark = ROBOT1.mu+(ROBOT1.Sigma*randn(3, 1))';
+                            else
+                                continue
+                            end
+                        case 2
+                             if ROBOT2.trust == true
+                                landmark = ROBOT2.mu+(ROBOT2.Sigma*randn(3, 1))';
+                            else
+                                continue
+                            end
+                        case 3
+                            if ROBOT3.trust == true
+                                landmark = ROBOT3.mu+(ROBOT3.Sigma*randn(3, 1))';
+                            else
+                                continue
+                            end
+                        case 4
+                            if ROBOT4.trust == true
+                                landmark = ROBOT4.mu+(ROBOT4.Sigma*randn(3, 1))';
+                            else
+                                continue
+                            end
+                        case 5
+                            if ROBOT5.trust == true
+                                landmark = ROBOT5.mu+(ROBOT5.Sigma*randn(3, 1))';
+                            else
+                                continue
+                            end
                         otherwise
                             landmark = LANDMARK(idx-5, 2:3)+LANDMARK(idx-5, 4:5).*randn(1, 2);
                     end
@@ -156,9 +198,14 @@
                 K = Cov_xz * (S \ eye(size(S)));
                 obj.mu_pred = obj.mu_pred + K * v;
                 obj.Sigma_pred = obj.Sigma_pred - K * S * K';
+                success = true;
             end
             obj.mu = obj.mu_pred;
             obj.Sigma = obj.Sigma_pred;
+            if success == true
+                obj.trust = true;
+                obj.time = 0;
+            end
         end
         
         function sigma_point(obj, mean, cov, kappa)

@@ -42,9 +42,12 @@ results2UKF = [];
 results3UKF = [];
 results4UKF = [];
 results5UKF = [];
+
 % useGTOnly = false;
 % useLandmarksOnly = false;
 % useTrustFactor = true;
+% trustFactorTime = 20;
+% numSteps = 30000;
 
 global ROBOT1 ROBOT2 ROBOT3 ROBOT4 ROBOT5 LANDMARK BAR
 if useGTOnly == true
@@ -63,7 +66,6 @@ end
 BAR = Barcodes;
 LANDMARK = Landmark_Groundtruth;
 
-% numSteps = 30000;
 for t = 1:numSteps
     % Robot1 Prediction & Correction
     motionCommand1 = Robot1_Odometry(t, 2:3);
@@ -72,9 +74,13 @@ for t = 1:numSteps
     if length(idx1)<1
         filter1.mu = filter1.mu_pred;
         filter1.Sigma = filter1.Sigma_pred;
+        filter1.time = filter1.time + 1;
     else
         observation1 = Robot1_Measurement(idx1, :);
-        filter1.correction(observation1, useGTOnly, useLandmarksOnly);
+        filter1.correction(observation1, useGTOnly, useLandmarksOnly, useTrustFactor);
+    end
+    if filter1.time > trustFactorTime / sample_time
+        filter1.trust = false;
     end
     Robot1_Correction(t,:) = filter1.mu;
     results1UKF(:, t) = mahalanobis(filter1.mu, filter1.Sigma, Robot1_Groundtruth(t, 2:4)');
@@ -86,9 +92,13 @@ for t = 1:numSteps
     if length(idx2)<1
         filter2.mu = filter2.mu_pred;
         filter2.Sigma = filter2.Sigma_pred;
+        filter2.time = filter2.time + 1;
     else
         observation2 = Robot2_Measurement(idx2, :);
-        filter2.correction(observation2, useGTOnly, useLandmarksOnly);
+        filter2.correction(observation2, useGTOnly, useLandmarksOnly, useTrustFactor);
+    end
+    if filter2.time > trustFactorTime / sample_time
+        filter2.trust = false;
     end
     Robot2_Correction(t,:) = filter2.mu;
     results2UKF(:, t) = mahalanobis(filter2.mu, filter2.Sigma, Robot2_Groundtruth(t, 2:4)');
@@ -100,9 +110,13 @@ for t = 1:numSteps
     if length(idx3)<1
         filter3.mu = filter3.mu_pred;
         filter3.Sigma = filter3.Sigma_pred;
+        filter3.time = filter3.time + 1;
     else
         observation3 = Robot3_Measurement(idx3, :);
-        filter3.correction(observation3, useGTOnly, useLandmarksOnly);
+        filter3.correction(observation3, useGTOnly, useLandmarksOnly, useTrustFactor);
+    end
+    if filter3.time > trustFactorTime / sample_time
+        filter3.trust = false;
     end
     Robot3_Correction(t,:) = filter3.mu;
     results3UKF(:, t) = mahalanobis(filter3.mu, filter3.Sigma, Robot3_Groundtruth(t, 2:4)');
@@ -114,9 +128,13 @@ for t = 1:numSteps
     if length(idx4)<1
         filter4.mu = filter4.mu_pred;
         filter4.Sigma = filter4.Sigma_pred;
+        filter4.time = filter4.time + 1;
     else
         observation4 = Robot4_Measurement(idx4, :);
-        filter4.correction(observation4, useGTOnly, useLandmarksOnly);
+        filter4.correction(observation4, useGTOnly, useLandmarksOnly, useTrustFactor);
+    end
+    if filter4.time > trustFactorTime / sample_time
+        filter4.trust = false;
     end
     Robot4_Correction(t,:) = filter4.mu;
     results4UKF(:, t) = mahalanobis(filter4.mu, filter4.Sigma, Robot4_Groundtruth(t, 2:4)');
@@ -128,9 +146,13 @@ for t = 1:numSteps
     if length(idx5)<1
         filter5.mu = filter5.mu_pred;
         filter5.Sigma = filter5.Sigma_pred;
+        filter5.time = filter5.time + 1;
     else
         observation5 = Robot5_Measurement(idx5, :);
-        filter5.correction(observation5, useGTOnly, useLandmarksOnly);
+        filter5.correction(observation5, useGTOnly, useLandmarksOnly, useTrustFactor);
+    end
+    if filter5.time > trustFactorTime / sample_time
+        filter5.trust = false;
     end
     Robot5_Correction(t,:) = filter5.mu;
     results5UKF(:, t) = mahalanobis(filter5.mu, filter5.Sigma, Robot5_Groundtruth(t, 2:4)');
