@@ -3,9 +3,11 @@
 % Purpose: Open data and explore format for 530 project
 
 close all;
-clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
+clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results* filterName
 
 disp("Running UKF");
+
+waitbar_h = waitbar(0,'Waitbar UKF');
 
 srcFolderPath = pwd;
 addpath(srcFolderPath)

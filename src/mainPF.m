@@ -7,10 +7,11 @@
 
 clc;
 close all;
-clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
+clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results* filterName
 
 
 disp("Running PF");
+waitbar_h = waitbar(0,'Waitbar PF');
 
 srcFolderPath = pwd;
 addpath PF_helpers
@@ -184,7 +185,6 @@ robot_num = 5;
 % track each robot's start index, since they are desync
 measurementIndex = [1 1 1 1 1];
 
-waitbar_h = waitbar(0,'Waitbar PF');
 lastPerc = 0;
 for i = start:end_idx
     if(mod(i,1000) == 0)
@@ -195,7 +195,7 @@ for i = start:end_idx
     perc = i/numSteps;
     if (abs(perc-lastPerc)>.01)
         lastPerc = perc;
-        waitbar(perc,waitbar_h,sprintf('%f%% along...',perc*100))
+        waitbar(perc,waitbar_h,sprintf('%f%% along PF...',perc*100))
     end
     
     % Iterate through robots

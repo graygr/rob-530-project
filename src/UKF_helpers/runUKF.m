@@ -66,7 +66,6 @@ end
 BAR = Barcodes;
 LANDMARK = Landmark_Groundtruth;
 
-waitbar_h = waitbar(0,'Waitbar UKF');
 lastPerc = 0;
 for t = 1:numSteps
     perc = t/numSteps;

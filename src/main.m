@@ -1,46 +1,88 @@
 clear all;
 close all;
 clc;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % User define the following values
-numSteps = 800;
-filter="ALL"; 
-useGTOnly=true;
-useLandmarksOnly=false;
-useTrustFactor=false;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set the number of time steps to run. Each time step is 0.02 seconds
+numSteps = 30000;
+
+%select a filter to run. Options are: "EKF","PF","UKF" or "ALL"
+filterName="ALL"; 
+
+% Specify the amount of time for the trust factor
 trustFactorTime=20; %seconds
 
-%%%%%
+% please select an operating mode by specifying an option
+% Option : "useGT", "useLandmarksOnly", or "useTrustFactor"
+mode = "useGT";
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Option : , , or 
+mode = "useTrustFactor";
+useGTOnly=false;
+useLandmarksOnly=false;
+useTrustFactor=false;
+if mode == "useGT"
+    useGTOnly=true;
+elseif mode == "useLandmarksOnly"
+    useLandmarksOnly=true;
+elseif mode == "useTrustFactor"
+    useTrustFactor=true;
+else 
+    error("Unexpected Mode. Mode options are 'useGT', 'useLandmarksOnly', or 'useTrustFactor'");
+end
 
 
-if filter == "EKF"
+if filterName == "EKF"
     run('mainEKF.m');
-elseif filter == "UKF"
+elseif filterName == "UKF"
     run('mainUKF.m');
-elseif filter == "PF"
+elseif filterName == "PF"
     run('mainPF.m');
-elseif filter == "ALL"
+elseif filterName == "ALL"
     run('mainEKF.m');
     run('mainPF.m');
     run('mainUKF.m');
 else
-    error("Unexpected filter. Usage mainHelper(numStemps, filter), where filter is 'EKF,'PF',or 'UKF'");
+    error("Unexpected filter. Filter options are 'EKF,'PF',or 'UKF'");
 end
-clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
+clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results* filterName
+    
 
+%% plotting
 
-% if filter == "EKF"
-%     run('mainEKF.m');
-% elseif filter == "UKF"
-% %     run('mainUKF.m');
-% elseif filter == "PF"
-%     run('mainPF.m');
-% elseif filter == "ALL"
-%     run('mainEKF.m');
-%     run('mainPF.m');
-% %     run('mainUKF.m');
-% else
-%     error("Unexpected filter. Usage mainHelper(numStemps, filter), where filter is 'EKF,'PF',or 'UKF'");
-% end
+filtersToPlot = [filterName];
+if filterName == "ALL"
+    filtersToPlot = ["EKF" "PF" "UKF"];
+end
+for filterIndex=1:length(filtersToPlot)
+    filterName = filtersToPlot(filterIndex);
+    figure();
+    hold on;
+    for i=1:5
+        cmd = strcat('results = results', num2str(i), filterName,';');
+        eval(cmd);
+        plot(1:numSteps,results(8,1:numSteps));   
+    end
+
+    if useLandmarksOnly == true
+        title([filterName 'Landmarks Only']);
+    elseif useGTOnly == true
+        title([filterName 'Use Robot GT Measurement']);
+    elseif useTrustFactor == true
+        astring = strcat('Use Robot Est w/ ',num2str(trustFactorTime),' sec trust barrier');
+        title([filterName astring]);
+    end
+
+    ylim([0 9]);
+    xlabel("Timestep");
+    ylabel("Distance Error");
+    legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
+
+end
+
 
 % eval(['results = results' num2str(id) 'EKF;'])
 % distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
@@ -48,15 +90,3 @@ clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactor
 % disp(['distance RMSE [' num2str(distanceRMSE) '] std deviation [' num2str(stdDeviation) '].']);
 
 
-
-
-
-
-% clc;
-% close all;
-% clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactorTime results*
-% 
-% 
-% 
-% srcFolderPath = pwd;
-% addpath(srcFolderPath)

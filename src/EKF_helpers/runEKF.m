@@ -66,7 +66,7 @@ for t = 1:numSteps
     perc = t/numSteps;
     if (abs(perc-lastPerc)>.01)
         lastPerc = perc;
-        waitbar(perc,waitbar_h,sprintf('%f%% along...',perc*100))
+        waitbar(perc,waitbar_h,sprintf('%f%% along EKF...',perc*100))
     end
 
     eval(['currTimeCheck = Robot' num2str(robotsToRun(1)) '_Odometry(t,1);'])
