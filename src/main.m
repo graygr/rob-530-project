@@ -19,8 +19,7 @@ trustFactorTime=20; %seconds
 mode = "useGT";
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Option : , , or 
-mode = "useTrustFactor";
+
 useGTOnly=false;
 useLandmarksOnly=false;
 useTrustFactor=false;
