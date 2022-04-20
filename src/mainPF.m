@@ -6,6 +6,8 @@
 % 
 % clc;clear; close all;
 
+disp("Running PF");
+
 srcFolderPath = pwd;
 addpath PF_helpers
 addpath(srcFolderPath)
@@ -176,10 +178,18 @@ robot_num = 5;
 % track each robot's start index, since they are desync
 measurementIndex = [1 1 1 1 1];
 
+waitbar_h = waitbar(0,'Waitbar PF');
+lastPerc = 0;
 for i = start:end_idx
     if(mod(i,1000) == 0)
         disp("On iteration: ")
         disp(i)
+    end
+    
+    perc = i/numSteps;
+    if (abs(perc-lastPerc)>.01)
+        lastPerc = perc;
+        waitbar(perc,waitbar_h,sprintf('%f%% along...',perc*100))
     end
     
     % Iterate through robots
@@ -241,7 +251,7 @@ results_3_PF = zeros(8, numSteps);
 results_4_PF = zeros(8, numSteps);
 results_5_PF = zeros(8, numSteps);
 
-hold on
+% hold on
 for i = 1:5
     if i == 1
         results_1_PF(8,:) = square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4))';
@@ -257,7 +267,7 @@ for i = 1:5
 %         plot(square_err(Robots{i}.G(1:numSteps,2:4), Robots{i}.Est(1:numSteps,2:4)));
 %     ylim([0, 5]);
 end
-hold off
+% hold off
 
 % Ask other robot location, their estimated accuracy rating (no. landmarks
 % in their view)

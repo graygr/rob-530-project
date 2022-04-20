@@ -4,14 +4,14 @@
 disp("Running EKF with robots:");
 disp(robotsToRun);
 tic;
-waitbar_h = waitbar(0,'Waitbar');
+waitbar_h = waitbar(0,'Waitbar EKF');
 
-timeTrustNumSteps = 1000;
 
 %Assume for now that all robots will use same alphas and beta
 % Motion noise (in odometry space, see Table 5.5, p.134 in book).
 
 deltaT = 0.02; 
+timeTrustNumSteps = trustFactorTime/deltaT;
 
 systems = {};
 filters = {};
