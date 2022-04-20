@@ -64,6 +64,10 @@ for filterIndex=1:length(filtersToPlot)
         cmd = strcat('results = results', num2str(i), filterName,';');
         eval(cmd);
         plot(1:numSteps,results(8,1:numSteps));   
+        distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
+        stdDeviation = std(results(8,1:numSteps));
+        astring = strcat(filterName,': Robot: ',num2str(i),' distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
+        disp(astring);
     end
 
     if useLandmarksOnly == true
@@ -80,10 +84,6 @@ for filterIndex=1:length(filtersToPlot)
     ylabel("Distance Error");
     legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
     
-    distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
-    stdDeviation = std(results(8,1:numSteps));
-    astring = strcat(filterName,': Robot: ',num2str(i),' distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
-    disp(astring);
 end
 
 
