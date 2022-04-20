@@ -23,7 +23,6 @@ classdef particle_filter < handle
         R;              % measurement noise covariance
         p;              % particles
         n;              % number of particles
-%         dt;             % sampling time
         Neff;           % effective number of particles
         last_timestep;
     end
@@ -114,9 +113,62 @@ classdef particle_filter < handle
             
             for j = 1:num_observations
                 if(z(3,j) > 5)
-                    % If static landmark, just pull from field info
-                    lm(j,1) = FIELDINFO(z(3,j) - 5, 2);
-                    lm(j,2) = FIELDINFO(z(3,j) - 5, 3);
+                    % Likely landmark check
+                    % The measurements may have the wrong landmark! Ignore
+                    % the observation if the perceived landmark range and
+                    % bearing is more than landmarkDistanceThreshold 
+                    
+                    x_t = ROBOT_ESTIMATES(robot_num,1);
+                    y_t = ROBOT_ESTIMATES(robot_num,2);
+                    theta_t = ROBOT_ESTIMATES(robot_num,3);
+                    
+                    x1 = x_t + z(1,j)*cos(z(2,j) + theta_t);
+                    y1 = y_t + z(1,j)*sin(z(2,j) + theta_t);
+                    landmarkX = FIELDINFO(z(3,j) - 5, 2);
+                    landmarkY = FIELDINFO(z(3,j) - 5, 3);
+                    
+                    distanceSquared = (landmarkX-x1)^2+(landmarkY-y1)^2;
+                    if distanceSquared > 0.5
+%                         eval(['countBadObservationIDMismatch' num2str(id) ...
+%                             ' = countBadObservationIDMismatch' num2str(id) ' + 1;'])
+%                         % see if there are any other likely landmarks, 
+                        foundLikely = false;
+                        bestLikelyDistance = Inf;
+                        bestLikelyLandmarkId = 0;
+                        bestLikelyLandmarkX = 0;
+                        bestLikelyLandmarkY = 0;
+                        for findLikelyLandmark=1:15
+                            currLandmarkId = FIELDINFO(findLikelyLandmark,1);
+                            currLandmarkX = FIELDINFO(findLikelyLandmark,2);
+                            currLandmarkY = FIELDINFO(findLikelyLandmark,3);
+                            
+                            currDistanceSquared = (currLandmarkX-x1)^2+(currLandmarkY-y1)^2;
+                            if currDistanceSquared < bestLikelyDistance && currDistanceSquared < 0.25
+                                foundLikely = true;
+                                bestLikelyDistance = currDistanceSquared;
+                                bestLikelyLandmarkId = currLandmarkId;
+                                bestLikelyLandmarkX = currLandmarkX;
+                                bestLikelyLandmarkY = currLandmarkY;
+                            end
+                        end
+                        
+                        if foundLikely == true
+%                             disp(['Found likely landmark to be ' num2str(bestLikelyLandmarkId) 'instead of ' num2str(idObserved)]);
+                            lm(j,1) = bestLikelyLandmarkX;
+                            lm(j,2) = bestLikelyLandmarkY;
+                            %idObserved = bestLikelyLandmarkId;
+                            %likelyLandmarbarcodeId = Barcodes(find(Barcodes(:,1)==bestLikelyLandmarkId),2);
+                            %measurements(j,1) = likelyLandmarbarcodeId;
+%                             eval(['fixedBadObservationIDMismatch' num2str(id) ...
+%                                 ' = fixedBadObservationIDMismatch' num2str(id) ' + 1;'])
+                        else
+                            continue;
+                        end
+                    else
+                        % If static landmark, just pull from field info
+                        lm(j,1) = FIELDINFO(z(3,j) - 5, 2);
+                        lm(j,2) = FIELDINFO(z(3,j) - 5, 3);
+                    end
                 else
                     % If robot, pull from current estimate
                     % If more than 10 sec since last, don't trust

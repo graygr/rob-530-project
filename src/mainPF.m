@@ -1,8 +1,10 @@
 % File: mainPF.m
 % Author: Gregor Limstrom <limstrom@umich.edu>
 % Purpose: Open data and explore format for 530 project
-clc;clear; close all;
+% Note - right click on mainPF.m to change directory to that in order to
+% work properly
 
+clc;clear; close all;
 
 srcFolderPath = pwd;
 addpath PF_helpers
@@ -52,7 +54,7 @@ start = 600;
 t = Robots{1}.G(start, 1);
 
 % End index and time
-end_idx = 1000;
+end_idx = 30000;
 
 % Num robots
 num_robots = 5;
@@ -225,9 +227,26 @@ end
 %animateMRCLAMdataSet(Robots, Barcodes, Landmark_Groundtruth, timesteps, 0.02, start, end_idx);
 
 %% Plot error
+results_1_PF = zeros(8, 30001-1000);
+results_2_PF = zeros(8, 30001-1000);
+results_3_PF = zeros(8, 30001-1000);
+results_4_PF = zeros(8, 30001-1000);
+results_5_PF = zeros(8, 30001-1000);
+
 hold on
 for i = 1:5
-    plot(square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4)));
+    if i == 1
+        results_1_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+    elseif i == 2
+        results_2_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+    elseif i == 3
+        results_3_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+    elseif i == 4
+        results_4_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+    elseif i == 5
+        results_5_PF(8,:) = square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4))';
+    end
+        plot(square_err(Robots{i}.G(1000:30000,2:4), Robots{i}.Est(1000:30000,2:4)));
     ylim([0, 5]);
 end
 hold off
@@ -295,8 +314,7 @@ function [err] = square_err(groundtruth, estimate)
     err = zeros(len,1);
     for i = 1:len
         err(i) = sqrt((groundtruth(i,1) - estimate(i,1))^2 + ...
-        (groundtruth(i,2) - estimate(i,2))^2); %+ ...
-        %wrapToPi((groundtruth(i,3) - estimate(i,3)))^2);
+        (groundtruth(i,2) - estimate(i,2))^2); 
     end
 end
   
