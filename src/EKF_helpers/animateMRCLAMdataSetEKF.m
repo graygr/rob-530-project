@@ -6,15 +6,14 @@
 
 % Options %
 WindowPosition=[50 40 630 740]; %left bottom width height, from primary display
-start_timestep = 1986;
-end_timestep = 1986; 
-timesteps_per_frame = 1;
-pause_time_between_frames=1; %[s]
-draw_measurements = 1;
-% robotsToRun = [1 2 3 4 5];
-n_robots = 5;
+start_timestep = 1;
+end_timestep = timesteps; 
+timesteps_per_frame = 50;
+pause_time_between_frames=0.01; %[s]
+draw_measurements = 0;
 % Options END %
 
+n_robots = 5;
 n_landmarks = length(Landmark_Groundtruth(:,1));
 
 % Plots and Figure Setup
@@ -53,17 +52,13 @@ for i = 1:n_robots
     eval(['n_measurements(i) = length(Robot' num2str(i) '_Measurement);'])
 end
 for i = 1:n_landmarks
-    eval(['landmarkID=Landmark_Groundtruth(' num2str(i) ',1)']);
     eval(['x=Landmark_Groundtruth(' num2str(i) ',2);']);
     eval(['y=Landmark_Groundtruth(' num2str(i) ',3);']);
     p1 = x - r_landmark;
     p2 = y - r_landmark;
     plotHandles_landmark_gt(i) = rectangle('Position',[p1,p2,d_landmark,d_landmark],'Curvature',[1,1],...
-              'FaceColor',colour(i+5,:),'LineWidth',1);    
-    texttime = strcat(num2str(landmarkID));
-    text(x+.1,y+.1,texttime);
+              'FaceColor',colour(i+5,:),'LineWidth',1);
 end
-
 
 axis square;
 axis equal;
@@ -111,17 +106,11 @@ for k=start_timestep:end_timestep
                 eval(['measure_id = Robot' num2str(i) '_Measurement(' num2str(measurement_time_index(i)) ',2);'])
                 eval(['measure_r = Robot' num2str(i) '_Measurement(' num2str(measurement_time_index(i)) ',3);'])
                 eval(['measure_b = Robot' num2str(i) '_Measurement(' num2str(measurement_time_index(i)) ',4);'])
-                
                 landmark_index = find(Barcodes(:,2)==measure_id);
                 if(~isempty(landmark_index))
-%                 disp(['See subject id ' num2str(measure_id) ' that has index ' num2str(landmark_index)]);
                     x1 = x(i) + measure_r*cos(measure_b + z(i));
                     y1 = y(i) + measure_r*sin(measure_b + z(i));
-                    if landmark_index == 17
-                        line([x(i) x1],[y(i) y1],'Color',[0 1 0],'LineWidth',1);
-                    else
-                        line([x(i) x1],[y(i) y1],'Color',colour(i,:),'LineWidth',1);
-                    end
+                    line([x(i) x1],[y(i) y1],'Color',colour(i,:),'LineWidth',1);
                 else
                     robot_index = find(Barcodes(1:5,2)==measure_id);
                     if(~isempty(robot_index))
@@ -137,12 +126,9 @@ for k=start_timestep:end_timestep
     
     % write time
     if(mod(k,timesteps_per_frame)==0)
-        if exist('textHandle')
-            delete(textHandle);
-        end
-%         delete(findobj('Type','text'));
+        delete(findobj('Type','text'));
         texttime = strcat('k= ',num2str(k,'%5d'), '  t= ',num2str(t,'%5.2f'), '[s]');
-        textHandle = text(1.5,6.5,texttime);
+        text(1.5,6.5,texttime);
         pause(pause_time_between_frames);
     else
         if(draw_measurements)

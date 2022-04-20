@@ -1,18 +1,23 @@
-% File: main.m
-% Author: Gregor Limstrom <limstrom@umich.edu>, 
-% Cameron Kabacinski <camkab@umich.ed>
+% File: mainEKF.m
+% Author:  Cameron Kabacinski <camkab@umich.ed>
 % Purpose: Open data and explore format for 530 project
 
 clc;
 close all;
 clearvars;
+
 srcFolderPath = pwd;
+addpath lib
+addpath EKF_helpers
 cd("../");
 topLevelPath = pwd;
 cd("collectedData");
 collectedDataPath = pwd;
 
 runDataFolders = ["MRCLAM1" "MRCLAM9"];
+runDataFolders = ["MRCLAM1"];
+saveOutput = false;
+currDataIndex=1;
 
 for currDataIndex=1:length(runDataFolders)
     cd(topLevelPath)
@@ -21,13 +26,13 @@ for currDataIndex=1:length(runDataFolders)
     %Load and sample data
     cmd = strcat('run(''data\', runDataFolders(currDataIndex), '\loadMRCLAMdataSet.m'');');
     eval(cmd);
-    run('Tools\sampleMRCLAMdataSet.m')
-    % run('Tools\animateMRCLAMdataSet.m') % Animate data
     cd(srcFolderPath)
+    run('sampleMRCLAMdataSetEKF.m')
+    % run('animateMRCLAMdataSetEKF.m') % Animate data
     
     % EKF filter for localization
     robotsToRun = [1 2 3 4 5];
-    numSteps = 20000;%length(Robot1_Groundtruth); %number of steps from dataset to run
+    numSteps = 1000;%length(Robot1_Groundtruth); %number of steps from dataset to run
     plotStatistics = false;
     plotObservationLines = [false false false]; %show when observations were used in the [x y theta] plots
     % The measurements may have the wrong landmark! Do something about the 
@@ -49,20 +54,25 @@ for currDataIndex=1:length(runDataFolders)
     useGTForObservedRobots = true;
     useEstimateForObservedRobots = ~useGTForObservedRobots;
     run('runEKF.m');
+    break
     close all;
-    cd(collectedDataPath);
-    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksAndRobotGT.mat");');
-    eval(cmd);
-    cd(srcFolderPath);
+    if saveOutput == true
+        cd(collectedDataPath);
+        cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksAndRobotGT.mat");');
+        eval(cmd);
+        cd(srcFolderPath);
+    end
     
     %Collect data on localizing with landmark data only
     useLandmarksOnly = true;
     run('runEKF.m');
     close all;
-    cd(collectedDataPath);
-    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksOnly.mat");');
-    eval(cmd);
-    cd(srcFolderPath);
+    if saveOutput == true
+        cd(collectedDataPath);
+        cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksOnly.mat");');
+        eval(cmd);
+        cd(srcFolderPath);
+    end
     
     %Collect data on localizing with landmarks and estimates of robots with
     %trustfactor
@@ -72,19 +82,23 @@ for currDataIndex=1:length(runDataFolders)
     useEstimateForObservedRobots = ~useGTForObservedRobots;
     run('runEKF.m');
     close all;
-    cd(collectedDataPath);
-    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksAndRobotEstwTrust.mat");');
-    eval(cmd);
-    cd(srcFolderPath);
+    if saveOutput == true
+        cd(collectedDataPath);
+        cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_landmarksAndRobotEstwTrust.mat");');
+        eval(cmd);
+        cd(srcFolderPath);
+    end
     
     % Collect data on localizing by predicition only
     useObservationsToCorrect = false;
     run('runEKF.m');
     close all;
-    cd(collectedDataPath);
-    cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_predictionOnly.mat");');
-    eval(cmd);   
-    cd(srcFolderPath);
+    if saveOutput == true
+        cd(collectedDataPath);
+        cmd = strcat('save("', runDataFolders(currDataIndex), '_EKF_predictionOnly.mat");');
+        eval(cmd);   
+        cd(srcFolderPath);
+    end
     
 end
 
