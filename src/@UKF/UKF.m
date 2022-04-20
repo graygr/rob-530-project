@@ -9,6 +9,7 @@
         kappa_g;        
         mu_pred;
         Sigma_pred;
+        trust;
         n;              % Number of Sigma points
         X;              % Sigma points
         w;              % Weight of Sigma points
@@ -29,6 +30,7 @@
             % initial mean and covariance
             obj.mu = init.mu;
             obj.Sigma = init.Sigma;
+            obj.trust = true;
         end
         
         %% Prediction function

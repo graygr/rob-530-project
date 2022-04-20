@@ -43,7 +43,8 @@ results3UKF = [];
 results4UKF = [];
 results5UKF = [];
 % useGTOnly = false;
-% useLandmarkOnly = false;
+% useLandmarksOnly = false;
+% useTrustFactor = true;
 
 global ROBOT1 ROBOT2 ROBOT3 ROBOT4 ROBOT5 LANDMARK BAR
 if useGTOnly == true
@@ -73,7 +74,7 @@ for t = 1:numSteps
         filter1.Sigma = filter1.Sigma_pred;
     else
         observation1 = Robot1_Measurement(idx1, :);
-        filter1.correction(observation1, useGTOnly, useLandmarkOnly);
+        filter1.correction(observation1, useGTOnly, useLandmarksOnly);
     end
     Robot1_Correction(t,:) = filter1.mu;
     results1UKF(:, t) = mahalanobis(filter1.mu, filter1.Sigma, Robot1_Groundtruth(t, 2:4)');
@@ -87,7 +88,7 @@ for t = 1:numSteps
         filter2.Sigma = filter2.Sigma_pred;
     else
         observation2 = Robot2_Measurement(idx2, :);
-        filter2.correction(observation2, useGTOnly, useLandmarkOnly);
+        filter2.correction(observation2, useGTOnly, useLandmarksOnly);
     end
     Robot2_Correction(t,:) = filter2.mu;
     results2UKF(:, t) = mahalanobis(filter2.mu, filter2.Sigma, Robot2_Groundtruth(t, 2:4)');
@@ -101,7 +102,7 @@ for t = 1:numSteps
         filter3.Sigma = filter3.Sigma_pred;
     else
         observation3 = Robot3_Measurement(idx3, :);
-        filter3.correction(observation3, useGTOnly, useLandmarkOnly);
+        filter3.correction(observation3, useGTOnly, useLandmarksOnly);
     end
     Robot3_Correction(t,:) = filter3.mu;
     results3UKF(:, t) = mahalanobis(filter3.mu, filter3.Sigma, Robot3_Groundtruth(t, 2:4)');
@@ -115,7 +116,7 @@ for t = 1:numSteps
         filter4.Sigma = filter4.Sigma_pred;
     else
         observation4 = Robot4_Measurement(idx4, :);
-        filter4.correction(observation4, useGTOnly, useLandmarkOnly);
+        filter4.correction(observation4, useGTOnly, useLandmarksOnly);
     end
     Robot4_Correction(t,:) = filter4.mu;
     results4UKF(:, t) = mahalanobis(filter4.mu, filter4.Sigma, Robot4_Groundtruth(t, 2:4)');
@@ -129,7 +130,7 @@ for t = 1:numSteps
         filter5.Sigma = filter5.Sigma_pred;
     else
         observation5 = Robot5_Measurement(idx5, :);
-        filter5.correction(observation5, useGTOnly, useLandmarkOnly);
+        filter5.correction(observation5, useGTOnly, useLandmarksOnly);
     end
     Robot5_Correction(t,:) = filter5.mu;
     results5UKF(:, t) = mahalanobis(filter5.mu, filter5.Sigma, Robot5_Groundtruth(t, 2:4)');
