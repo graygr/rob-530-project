@@ -82,7 +82,7 @@ for filterIndex=1:length(filtersToPlot)
     
     distanceRMSE = sqrt(sum(results(8,1:numSteps).^2)/numSteps);
     stdDeviation = std(results(8,1:numSteps));
-    astring = strcat(filterName,': distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
+    astring = strcat(filterName,': Robot: ',num2str(i),' distance RMSE [', num2str(distanceRMSE), '] std deviation [', num2str(stdDeviation), '].');
     disp(astring);
 end
 
