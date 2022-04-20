@@ -3,11 +3,12 @@
 % Purpose: Open data and explore format for 530 project
 % Note - right click on mainPF.m to change directory to that in order to
 % work properly
-
-clc;clear; close all;
+% 
+% clc;clear; close all;
 
 srcFolderPath = pwd;
 addpath PF_helpers
+addpath(srcFolderPath)
 cd("../");
 topLevelPath = pwd;
 
