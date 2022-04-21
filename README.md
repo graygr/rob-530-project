@@ -7,10 +7,17 @@ In this project, we created several different filters to perform cooperative loc
 
 In order to model a trust system for the robots, we measured the number of update ticks since the last fully observable state for each robot, and only updated the corresponding state when we determined that a robot was well versed enough in its own location to localize off of and correct the odometry drift. This resulted in large improvements for the Particle Filter, but the UKF still performed the best through the trial. 
 
-Future work to explore
+# Results
+- The filters work and are able localize the robots through the dataset
+- The filters generally improved in performance with the trust factor implemented
+- Certain sections of the dataset throw off the filters and cause robots to lose localization, especially around areas with very few measurements of any kind
+- UKF performed the best out of the filters
+
+# Future work
 - Trust gradient
 - Nonlinear trust propogation through relative observations
 - Landmark removal and forced relative observations
+- Apply work to different dataset to see if results hold under different conditions
 
 Link to Presentation: [Link](https://www.youtube.com/watch?v=r0BZHNcIqdw)
 
