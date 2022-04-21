@@ -1,3 +1,5 @@
 *.asv
 collectedData/*
 !collectedData/placeHolder.txt
+*.png
+*.pdf

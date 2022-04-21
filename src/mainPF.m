@@ -15,6 +15,7 @@ waitbar_h = waitbar(0,'Waitbar PF');
 
 srcFolderPath = pwd;
 addpath PF_helpers
+addpath lib
 addpath(srcFolderPath)
 cd("../");
 topLevelPath = pwd;
@@ -24,21 +25,36 @@ cd(topLevelPath)
 %% Load data from MRCLAM9
 %run('data\MRCLAM9\loadMRCLAMdataSet.m')
 
-% numSteps
-% useGTOnly
-% useLandmarksOnly
-% useTrustFactor
-% trustFactorTime
-
-
 % Load data from MRCLAM 1
-run('data\MRCLAM1\loadMRCLAMdataSetPF.m')
+run('data\MRCLAM1\loadMRCLAMdataSet.m')
 
 % Sample data
 dt = 0.02;
-[Robots, timesteps] = sampleMRCLAMdataSetPF(Robots, 0.02);
-
+run('sampleMRCLAMdataSet.m')
 cd(srcFolderPath)
+
+% Set up robots to right format
+Robots = cell(1, 5);
+Robots{1}.G = Robot1_Groundtruth;
+Robots{1}.M = Robot1_Measurement;
+Robots{1}.O = Robot1_Odometry;
+
+Robots{2}.G = Robot2_Groundtruth;
+Robots{2}.M = Robot2_Measurement;
+Robots{2}.O = Robot2_Odometry;
+
+Robots{3}.G = Robot3_Groundtruth;
+Robots{3}.M = Robot3_Measurement;
+Robots{3}.O = Robot3_Odometry;
+
+Robots{4}.G = Robot4_Groundtruth;
+Robots{4}.M = Robot4_Measurement;
+Robots{4}.O = Robot4_Odometry;
+
+Robots{5}.G = Robot5_Groundtruth;
+Robots{5}.M = Robot5_Measurement;
+Robots{5}.O = Robot5_Odometry;
+
 
 % Set field info to landmark GT
 global FIELDINFO;

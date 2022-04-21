@@ -16,7 +16,7 @@ trustFactorTime=20; %seconds
 
 % please select an operating mode by specifying an option
 % Option : "useGT", "useLandmarksOnly", or "useTrustFactor"
-mode = "useGT";
+mode = "useLandmarksOnly";
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -79,9 +79,10 @@ for filterIndex=1:length(filtersToPlot)
         title([filterNameCurr astring]);
     end
 
-    %ylim([0 9]);
+    
+    ylim([0 14]);
     xlabel("Timestep");
-    ylabel("Distance Error");
+    ylabel("Distance Error m");
     legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
     
 end
