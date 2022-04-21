@@ -56,9 +56,22 @@ filtersToPlot = [filterName];
 if filterName == "ALL"
     filtersToPlot = ["EKF" "PF" "UKF"];
 end
+figure()
+currSubplot=1;
+
+if useLandmarksOnly == true
+    sgtitle('Landmarks Only');
+elseif useGTOnly == true
+    sgtitle('Use Robot GT Measurement');
+elseif useTrustFactor == true
+    astring = strcat('Use Robot Est w/ ',num2str(trustFactorTime),' sec trust barrier');
+    sgtitle(astring);
+end
+
 for filterIndex=1:length(filtersToPlot)
     filterNameCurr = filtersToPlot(filterIndex);
-    figure();
+    subplot(1,3,currSubplot);
+    currSubplot = currSubplot + 1;
     hold on;
     for i=1:5
         cmd = strcat('results = results', num2str(i), filterNameCurr,';');
@@ -71,18 +84,23 @@ for filterIndex=1:length(filtersToPlot)
     end
 
     if useLandmarksOnly == true
-        title([filterNameCurr 'Landmarks Only']);
+        title(filterNameCurr);% 'Landmarks Only']);
     elseif useGTOnly == true
-        title([filterNameCurr 'Use Robot GT Measurement']);
+        title(filterNameCurr);% 'Use Robot GT Measurement']);
     elseif useTrustFactor == true
         astring = strcat('Use Robot Est w/ ',num2str(trustFactorTime),' sec trust barrier');
-        title([filterNameCurr astring]);
+        title(filterNameCurr);% astring]);
     end
 
-    ylim([0 14]);
+    ylim([0 9]);
+    
     xlabel("Timestep");
-    ylabel("Distance Error m");
-    legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
+    if filterIndex == 1
+        ylabel("Distance Error m");
+    end
+    if filterIndex == 3
+        legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
+    end
     
 end
 
