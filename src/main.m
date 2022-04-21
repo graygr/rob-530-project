@@ -9,10 +9,10 @@ clc;
 numSteps = 30000;
 
 %select a filter to run. Options are: "EKF","PF","UKF" or "ALL"
-filterName="PF"; 
+filterName="ALL"; 
 
 % Specify the amount of time for the trust factor
-trustFactorTime=20; %seconds
+trustFactorTime=10; %seconds
 
 % please select an operating mode by specifying an option
 % Option : "useGT", "useLandmarksOnly", or "useTrustFactor"
@@ -53,8 +53,10 @@ clearvars -except numSteps useGTOnly useLandmarksOnly useTrustFactor trustFactor
 %% plotting
 
 filtersToPlot = [filterName];
+numCols = 1;
 if filterName == "ALL"
     filtersToPlot = ["EKF" "PF" "UKF"];
+    numCols = 3;
 end
 figure()
 currSubplot=1;
@@ -70,7 +72,7 @@ end
 
 for filterIndex=1:length(filtersToPlot)
     filterNameCurr = filtersToPlot(filterIndex);
-    subplot(1,3,currSubplot);
+    subplot(1,numCols,currSubplot);
     currSubplot = currSubplot + 1;
     hold on;
     for i=1:5
@@ -98,7 +100,7 @@ for filterIndex=1:length(filtersToPlot)
     if filterIndex == 1
         ylabel("Distance Error m");
     end
-    if filterIndex == 3
+    if filterIndex == 3 || (filterIndex ==1 && numCols == 1)
         legend("Robot 1","Robot 2","Robot 3","Robot 4","Robot 5");
     end
     
