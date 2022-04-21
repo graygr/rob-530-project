@@ -1,7 +1,7 @@
 clear all;
 close all;
 clc;
-
+%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % User define the following values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -9,14 +9,14 @@ clc;
 numSteps = 30000;
 
 %select a filter to run. Options are: "EKF","PF","UKF" or "ALL"
-filterName="ALL"; 
+filterName="PF"; 
 
 % Specify the amount of time for the trust factor
 trustFactorTime=20; %seconds
 
 % please select an operating mode by specifying an option
 % Option : "useGT", "useLandmarksOnly", or "useTrustFactor"
-mode = "useLandmarksOnly";
+mode = "useGT";
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -79,7 +79,6 @@ for filterIndex=1:length(filtersToPlot)
         title([filterNameCurr astring]);
     end
 
-    
     ylim([0 14]);
     xlabel("Timestep");
     ylabel("Distance Error m");
